@@ -34,6 +34,7 @@ import org.json.JSONObject;
 public class MainActivity extends Activity {
 
     private WebView webView;
+    private AppUpdater appUpdater;
     private ValueCallback<Uri[]> filePathCallback;
     private static final int FILE_REQ = 1001;
     private static final int TREE_REQ = 1002;
@@ -143,6 +144,7 @@ public class MainActivity extends Activity {
 
         // 原生下载桥：支持中文文件名，直接存到下载目录
         webView.addJavascriptInterface(new DownloadBridge(), "AndroidDL");
+        appUpdater = new AppUpdater(this);
         // HTTP 代理桥：让 JS 通过 Java 发 HTTP 请求，Java 自己管 cookie（含 .sig）
         webView.addJavascriptInterface(new StHttpBridge(getCacheDir()), "StHttpBridge");
         // 导航桥：打开系统浏览器、退出 App
@@ -244,6 +246,7 @@ public class MainActivity extends Activity {
 
     // 原生下载桥：JS 传 base64 内容 + 文件名，写入公共下载目录，完整保留中文名
     private class DownloadBridge {
+        @JavascriptInterface public void checkAppUpdate() { runOnUiThread(() -> appUpdater.check()); }
 
         // —— 分块写入：用于超大文件（如完整备份），避免一次性传输撑爆 JS 桥 ——
         private java.io.OutputStream chunkOut = null;
