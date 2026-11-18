@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>克克卡库 · 浏览器预览版</title><script src="web-preview.js?v=2"></script>
+<title>克克卡库 · v4.1.4</title>
 <style>
 :root{
   --p:#F2ECE2;--p2:#FFFDF8;--p3:#E8DDCC;--p4:#D6C6B2;
@@ -5409,7 +5409,7 @@ function renderSafetyLibraryLegacy(){const el=document.getElementById('safetyLib
 function chooseSafetyLibrary(){if(!window.AndroidFolder?.chooseSafetyFolder)return showToast('当前版本不支持安全目录');AndroidFolder.chooseSafetyFolder()}
 async function disableSafetyLibrary(){if(!safetyInfo().ready)return showToast('实时备份已经关闭');if(!await confirmDialog('关闭实时备份？以后不再自动同步，目录中已有备份会保留。',{okText:'关闭备份'}))return;safetyMirrorQueue=[];safetyMirrorRunning=false;try{window.AndroidFolder?.disableSafetyFolder?.();safetyInfoCache=null}catch(e){}renderSafetyLibrary();showToast('实时备份已关闭，已有文件已保留')}
 function onSafetyFolderChosen(){renderSafetyLibrary();showToast('安全目录已授权；可补齐现有卡片')}
-function safetyMirrorName(card){const ext=tfExtByCard(card),base=(card.name||'card').replace(/[\\/:*?\"<>|]/g,'_').slice(0,80);return 'kaku_'+(card.id||'card')+'__'+base+'.'+ext}
+function safetyMirrorName(card){const ext=tfExtByCard(card),base=(card.name||'card').replace(/[\\/:*?\"<>|]/g,'_').trim().slice(0,80)||'card';return 'kaku_'+base+'__'+(card.id||'card')+'.'+ext}
 async function validateSafetyPng(blob){const bytes=new Uint8Array(await blob.arrayBuffer()),view=new DataView(bytes.buffer);const sig=[137,80,78,71,13,10,26,10];if(bytes.length<33||!sig.every((x,i)=>bytes[i]===x))throw Error('PNG 文件头损坏');let p=8,end=false,idat=false;while(p+12<=bytes.length){const n=view.getUint32(p),type=String.fromCharCode(...bytes.subarray(p+4,p+8));if(n>bytes.length-p-12)throw Error('PNG 数据块不完整');if(type==='IDAT')idat=true;if(type==='IEND'){end=true;break}p+=n+12}if(!end||!idat)throw Error('PNG 缺少完整图像数据');const url=URL.createObjectURL(blob);try{await new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>img.naturalWidth&&img.naturalHeight?resolve():reject(Error('PNG 图像为空'));img.onerror=()=>reject(Error('PNG 封面解码失败，已停止覆盖备份'));img.src=url})}finally{URL.revokeObjectURL(url)}}
 async function safetyWriteBase64(name,b64,overwrite){const F=window.AndroidFolder,state=String(F.beginSafetyWriteMode?F.beginSafetyWriteMode(name,!!overwrite):F.beginSafetyWrite(name));if(state==='exists')return'exists';if(state!=='ok')throw new Error(state.replace(/^error:/,''));const CH=768*1024;for(let i=0;i<b64.length;i+=CH){if(!F.appendSafetyChunk(b64.slice(i,i+CH)))throw new Error('写入实时备份失败');await sleep(0)}if(!F.endSafetyWrite())throw new Error('完成实时备份失败');return'ok'}
 function safetyCardMeta(c){return {version:1,id:c.id,name:c.name,section:c.section,tags:c.tags||[],sourceTags:c.sourceTags||[],subtags:c.subtags||[],groupIds:cardGroupIds(c),groupId:cardGroupIds(c)[0]||null,favorite:!!c.favorite,note:c.note||'',annex:c.annex||'',parentId:c.parentId||null,importedAt:c.importedAt||0,fileType:c.fileType||'',organizeMeta:c.organizeMeta||null,importHash:c.importHash||'',updatedAt:Date.now()}}
@@ -8584,5 +8584,3 @@ function attachCandidateSearch(box,sel){const combo=document.createElement('div'
 </style>
 
 <style>#safetyLiveProgress{position:fixed;left:12px;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:2500;max-width:calc(100vw - 24px);padding:9px 13px;border:1px solid var(--bd);border-radius:10px;background:var(--paper,#fffaf4);color:var(--ink,#49372e);box-shadow:0 3px 14px #0002;font-size:12px;pointer-events:none}#safetyLiveProgress[hidden]{display:none}</style>
-
-<link rel="stylesheet" href="browser-layout.css?v=2">
