@@ -2,6 +2,10 @@
 
 Android 角色卡与个人资源管理工具，支持分类整理、备份及 SillyTavern 互通。维护者：kitten112233。
 
+### 🌐 [点击打开浏览器预览版（免安装）](https://kitten112233.github.io/keke-card-library/)
+
+浏览器预览版数据保存在当前浏览器，与 APK 不自动同步；酒馆互通、目录扫描及实时目录备份暂不开放。已验证线上页面启动与数据库初始化，完整导入导出仍待实测。
+
 ## 📥 下载与安装
 
 ### 👉 [点击下载安卓安装包 · 4.1.4](https://github.com/kitten112233/keke-card-library/releases/download/v4.1.4/kaku-4.1.4.apk)
