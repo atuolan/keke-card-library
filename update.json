@@ -1,7 +1,7 @@
 {
-  "versionCode": 414,
-  "versionName": "4.1.4",
-  "apkUrl": "https://github.com/kitten112233/keke-card-library/releases/download/v4.1.4/kaku-4.1.4.apk",
-  "sha256": "03db68cd765c7599551077558fc57e3799daf2548cd0b27b8c8eebe696b83993",
-  "notes": "新增设置页检查更新：查看版本说明、下载 APK、SHA-256 校验及打开系统安装界面。"
+  "versionCode": 415,
+  "versionName": "4.1.5",
+  "apkUrl": "https://github.com/kitten112233/keke-card-library/releases/download/v4.1.5/kaku-4.1.5.apk",
+  "sha256": "831f13ad160f8f368f7b09f4643476f00ad85a49eda6e53954eaf5ff874e7847",
+  "notes": "云盘/实时备份文件名优先显示角色卡名称，并保留 ID 供配对恢复；兼容旧格式备份。"
 }
