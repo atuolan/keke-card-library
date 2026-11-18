@@ -10,7 +10,7 @@ Android 角色卡与个人资源管理工具。维护者：kitten112233。
 
 ## 构建
 
-需要 JDK 17、Android SDK 34；运行 `./gradlew assembleDebug`。Gradle 工程已按当前源码整理，但尚未完成干净环境构建验证。发行 APK 使用独立的本地签名构建流程，不能声称此工程已经复现发行包。
+需要 JDK 17、Android SDK 34；运行 `bash gradlew assembleDebug`。2026-11-18 已通过本机 Gradle Debug 构建（BUILD SUCCESSFUL）。ARM Linux 环境需提供可运行的 AAPT2，例如追加 `-Pandroid.aapt2FromMavenOverride=/usr/bin/aapt2`；路径仅为本机示例。尚未在全新电脑环境复验。发行 APK 使用独立的本地签名构建流程，不能声称此工程已经复现发行包。
 
 自行构建使用自己的签名，无法覆盖维护者签名的发行版。维护者签名密钥不随仓库提供。
 
