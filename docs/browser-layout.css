@@ -1,0 +1,9 @@
+/* Size overlays against the visible browser viewport, including keyboard changes. */
+.modal-mask { inset:auto!important; top:var(--browser-top,0px)!important; left:var(--browser-left,0px)!important; width:var(--browser-width,100%)!important; height:var(--browser-height,100dvh)!important; box-sizing:border-box!important; padding: max(8px,env(safe-area-inset-top,0px)) max(0px,env(safe-area-inset-right,0px)) max(8px,env(safe-area-inset-bottom,0px)) max(0px,env(safe-area-inset-left,0px))!important; overflow:hidden!important; }
+.modal-mask .modal-box { box-sizing:border-box!important; max-width:100%!important; max-height:100%!important; min-height:0!important; margin:0!important; overflow-y:auto!important; overscroll-behavior:contain; }
+.modal-mask.show .modal-box { transform:none!important; }
+.modal-hd { position:sticky!important; top:0!important; flex-shrink:0!important; z-index:30!important; gap:8px; }
+.modal-hd > :first-child { min-width:0; overflow-wrap:anywhere; }
+.modal-hd button { flex-shrink:0!important; min-width:44px; min-height:44px; }
+.read-box { max-height:var(--browser-height,100dvh)!important; min-height:0!important; }
+.modal-body { min-width:0; overflow-wrap:anywhere; }
