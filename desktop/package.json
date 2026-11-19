@@ -1,0 +1,27 @@
+{
+  "name": "kaku-desktop",
+  "productName": "克克卡库",
+  "version": "0.0.0",
+  "private": true,
+  "description": "克克卡库桌面版",
+  "author": "kitten112233",
+  "license": "SEE LICENSE IN ../LICENSE.md",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test test/unit/*.test.js",
+    "test:e2e": "node test/e2e/run.js",
+    "icon": "node scripts/make-icon.js",
+    "build:win": "node scripts/build-win.js"
+  },
+  "dependencies": {
+    "@streamparser/json": "0.0.26",
+    "yauzl": "3.4.0",
+    "yazl": "3.3.1"
+  },
+  "devDependencies": {
+    "electron": "45.2.2",
+    "electron-builder": "26.18.1",
+    "pngjs": "7.0.0"
+  }
+}
