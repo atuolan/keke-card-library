@@ -181,7 +181,9 @@ body{font-family:var(--ss);background:var(--p);color:var(--ink);display:flex;fle
 .modal-mask.show{opacity:1;pointer-events:all}
 /* pickModal 常作为详情页之上的二级弹窗（版本管理等），提高层级避免被 detailModal 盖住 */
 #pickModal{z-index:560}
-.modal-box{background:var(--p2);border-top:2px solid var(--ink);width:100%;max-width:640px;max-height:92vh;overflow-y:auto;padding:0;transform:translateY(28px);transition:transform .25s;-webkit-overflow-scrolling:touch}
+#pickModal .modal-box{height:auto;max-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));overflow:hidden}
+#pickModal .modal-body{max-height:none;overflow:visible}
+.modal-box{background:var(--p2);border-top:2px solid var(--ink);width:100%;max-width:640px;height:min(92vh,calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)));max-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));overflow:hidden;padding:0;transform:translateY(28px);transition:transform .25s;-webkit-overflow-scrolling:touch}
 .modal-mask.show .modal-box{transform:translateY(0)}
 .modal-mask.no-motion,.modal-mask.no-motion .modal-box{transition:none!important}
 @media(min-width:640px){.modal-mask{align-items:center}.modal-box{border:2px solid var(--ink);max-height:88vh}}
@@ -190,7 +192,7 @@ body{font-family:var(--ss);background:var(--p);color:var(--ink);display:flex;fle
 .modal-title{font-size:11px;font-weight:700;font-family:var(--sf);letter-spacing:.1em;color:var(--ink);text-transform:uppercase;flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:8px}
 .mclose{background:var(--p3);border:1px solid var(--bd);color:var(--ink);font-size:14px;cursor:pointer;padding:4px 11px;border-radius:var(--r);font-weight:700;min-width:32px;text-align:center;flex-shrink:0;line-height:1.2;transition:all .2s}
 .mclose:hover{background:var(--ink);color:var(--p)}
-.modal-body{padding:12px 14px 40px}
+.modal-body{padding:12px 14px 40px;overflow-y:auto;max-height:calc(100% - 54px);-webkit-overflow-scrolling:touch}
 /* ─── 备注横幅 ─── */
 .note-banner{background:var(--kaku-modal-bg);color:var(--kaku-modal-text);border-top:1px solid var(--bd);border-bottom:1px solid var(--bd);border-left:6px solid var(--kaku-note-text);padding:8px 14px 9px;font-size:11px;font-family:var(--sf);line-height:1.5;display:none}
 .note-banner.show{display:block}
@@ -982,7 +984,7 @@ mark{background:rgba(184,150,62,.3);color:var(--gold)}
 </div>
 
 <div class="topbar">
-  <div class="logo" aria-label="克克卡库 4.1.3"><span class="logo-line"><span class="logo-m">克克卡库</span></span><span class="logo-s"><span class="logo-en">CARD ARCHIVE</span><span class="logo-v">v4.1.4</span></span></div>
+  <div class="logo" aria-label="克克卡库 4.1.5"><span class="logo-line"><span class="logo-m">克克卡库</span></span><span class="logo-s"><span class="logo-en">CARD ARCHIVE</span><span class="logo-v">v4.1.5</span></span></div>
   <div class="sbox"><input type="text" id="searchInput" placeholder="Search cards..." autocomplete="off"><span class="sico">⌕</span></div>
   <button class="hbtn" id="selectModeBtn" onclick="toggleSelectMode()">选择</button>
   <button class="hbtn theme-btn" id="themeBtn" onclick="toggleTheme()"><span class="theme-symbol">✣</span></button>
@@ -1708,12 +1710,12 @@ function styleAIBriefText(){
  const name=(document.getElementById('styleProfileName')?.value||'我的风格').trim()||'我的风格',base=currentEditorBase();
  const palette=styleTemplate(editorPaletteVars('light'),name,base,editorPaletteVars('dark'));
  return [
- '你是克克卡库 v4.1.4 的界面风格设计师。请根据我接下来补充的审美要求，设计一份可直接导入“风格工坊”的完整 CSS。','','【应用与运行环境】',
+ '你是克克卡库 v4.1.5 的界面风格设计师。请根据我接下来补充的审美要求，设计一份可直接导入“风格工坊”的完整 CSS。','','【应用与运行环境】',
  '- 克克卡库是单页、离线优先的 Android WebView 卡库，界面代码位于同一份 HTML 中。','- 当前视觉底稿：'+BUILTIN_STYLE_NAMES[base]+'（代码值 '+base+'）。','- 目标风格名称：'+name+'。','- 只能修改外观，不能修改、隐藏、删除或读取卡片正文、世界书、聊天记录与本地数据。','- 快速预览是轻量浏览，只呈现基础信息、标签、版本、链接、备注、附加区与详情入口；不得显示或新增卡片简介。','',
  '【必须交付】','1. 同时提供日间和夜间完整配色，18 个 --kaku-* 颜色变量一个都不能少。','2. 夜间弹窗必须明显暗于弹窗正文，弹窗正文/背景对比度至少 4.5:1，标题至少 4.5:1；不要只把日间颜色机械反相。','3. 在 KAKU_ADVANCED_START/END 中提供高级 CSS；可设计字体、圆角、边框、阴影、渐变、材质和轻量动画。','4. 动画只能使用 transform、opacity、background-position 等轻量属性，并提供 @media (prefers-reduced-motion: reduce) 的静态回退。','5. 最终答复只输出一份完整 CSS 代码块，不要解释，不要省略变量，不要输出 HTML 或 JavaScript。','',
  '【18 个语义颜色变量及作用】','--kaku-page-bg 页面总背景；--kaku-card-bg 卡片/主面板背景；--kaku-panel-bg 输入框与次级面板；--kaku-modal-bg 弹窗专用背景；','--kaku-body-text 全局正文；--kaku-topbar-text 顶部栏；--kaku-nav-text 分区/筛选导航；--kaku-stats-text 辅助文字、统计与弱提示；','--kaku-card-title 卡片名；--kaku-card-body 首页与完整详情中的卡片简介及阅读正文；--kaku-note-text 首页、快速预览与详情中的备注；--kaku-tag-text 各处主标签；','--kaku-button-text 普通按钮；--kaku-modal-title 弹窗与阅读标题；--kaku-modal-text 弹窗正文；--kaku-setting-title 设置板块标题；--kaku-accent 强调色；--kaku-danger 危险操作。','注意：这些是独立语义色。修改弹窗正文不得改动全局正文、卡片正文、按钮或危险色。','- 详情顶部备注横幅必须保持可读：正文使用弹窗正文色，背景使用弹窗背景色，备注色只用于书签边框或小标签；不得让同一种备注色同时充当前景和背景。','',
  '【可编辑区域与真实选择器】','页面 body；顶部 .topbar；品牌 .logo/.logo-m/.logo-s/.logo-v；搜索 .sbox；分区 .secbar/.stab；筛选 .filterbar-wrap/.fchip；统计 .statsbar；','网格 .grid-layout/.list-layout/.magazine-layout；卡片 .card-item/.cov-wrap/.cinfo/.cname/.cdesc/.cnote/.ctag；文件夹 .folder-cover/.folder-name；','弹窗 .modal-mask/.modal-box/.modal-hd/.modal-title/.modal-body；快速预览 .qp-name/.qp-note/.qp-tag/.qp-sec-hd；阅读 .read-box/.read-body；设置 .settings-page-nav/.settings-page-tab/.set-card；','输入 input/select/textarea/.inp；按钮 button/.actbtn/.hbtn；主加号 #mainFab；展开菜单 .fab-menu button；详情备注横幅 #detailModal .note-banner；AI区 .ai-manage-panel/.ai-assistant-bubble。','',
- '【不可破坏的布局边界】','- 不得改变 .topbar 的核心 flex 结构；“克克卡库”必须完整显示，不能挤压搜索框，不能覆盖 v4.1.4。','- 不得把设置分类栏、板块标题或普通内容设置成 fixed/sticky；不得制造遮挡、横向滚动或不可点击区域。','- 不得隐藏关闭按钮、搜索、导入、备份、恢复、AI诊断等功能；不得使用全局 * 选择器重置布局。','- 手机优先，至少兼容 280px 宽度与 1.5 倍字号；必要时用 @media (max-width:420px)。','- 禁止 @import、url()、外部字体/图片、expression、javascript:、behavior、HTML 标签和脚本。可使用系统字体及 CSS 渐变。','',
+ '【不可破坏的布局边界】','- 不得改变 .topbar 的核心 flex 结构；“克克卡库”必须完整显示，不能挤压搜索框，不能覆盖 v4.1.5。','- 不得把设置分类栏、板块标题或普通内容设置成 fixed/sticky；不得制造遮挡、横向滚动或不可点击区域。','- 不得隐藏关闭按钮、搜索、导入、备份、恢复、AI诊断等功能；不得使用全局 * 选择器重置布局。','- 手机优先，至少兼容 280px 宽度与 1.5 倍字号；必要时用 @media (max-width:420px)。','- 禁止 @import、url()、外部字体/图片、expression、javascript:、behavior、HTML 标签和脚本。可使用系统字体及 CSS 渐变。','',
  '【当前配色底稿；可以重设计颜色，但必须保留相同变量名与两段结构】',palette,'','【标准答卷骨架】','在上面的两段 :root 配色之后继续输出：','/* KAKU_ADVANCED_START */','/* 这里写仅作用于上述真实选择器的高级 CSS */','@media (prefers-reduced-motion: reduce) { /* 关闭自定义无限动画与大幅过渡 */ }','/* KAKU_ADVANCED_END */','','现在先理解全部约束，再根据我随后提供的审美描述完成风格。若我的描述与可用性冲突，以文字可读、按钮可点、数据安全和窄屏不溢出为最高优先级。'
  ].join('\n');
 }
@@ -5099,7 +5101,7 @@ const KAKU_KNOWLEDGE=[
  {id:'export',title:'导出原始文件和未推送',keys:'导出 原始文件 未推送 下载 卡库 ZIP 分批',text:'路径：设置 → 数据与安全 → 备份与恢复。原始文件可按全部、分区或具体项目导出；大量项目会分批并记录传输任务。用户导出通常保存到内部存储“Download/卡库”。“仅导出未推送”用于筛选尚未推送的项目。'}
 ];
 
-const AI_ASSISTANT_SYSTEM=`你是“克克卡库 v4.1.4”当前版本的专属功能助手与谨慎型故障排查助手。
+const AI_ASSISTANT_SYSTEM=`你是“克克卡库 v4.1.5”当前版本的专属功能助手与谨慎型故障排查助手。
 
 工作规则：
 1. 优先依据每轮提供的【卡库功能知识】回答，使用真实按钮名和路径；不要凭通用软件经验编造卡库不存在的入口。
@@ -5786,7 +5788,7 @@ function uiPaint(){return new Promise(r=>requestAnimationFrame(()=>requestAnimat
 async function openModalBehindBusy(id){const m=document.getElementById(id);m.classList.add('no-motion','show');void m.offsetHeight;await new Promise(r=>requestAnimationFrame(r));m.classList.remove('no-motion')}
 function openModal(id){const m=document.getElementById(id);if(!m)return;if(id==='detailModal'||id==='settingsModal'){m.classList.add('no-motion');m.classList.add('show');return}m.classList.add('show')}
 function finishModalClose(id,m){m.classList.remove('show','no-motion');if(id==='pickModal')m.classList.remove('assistant-message-menu');if(id==='quickPreviewModal'&&typeof drawState!=='undefined'&&drawState.previewing){drawState.previewing=false;setTimeout(()=>openModal('drawModal'),0)}if(id==='detailModal'&&typeof drawState!=='undefined'&&drawState.detailing){drawState.detailing=false;setTimeout(()=>openModal('drawModal'),0)}}
-function closeModal(id){if(id==='aiModal')return requestCloseAI();const m=document.getElementById(id),browsing=(id==='quickPreviewModal'||id==='detailModal')&&typeof cardBrowseState!=='undefined'&&cardBrowseState.active;if(!browsing)return finishModalClose(id,m);if(m.dataset.browseClosing==='1')return;m.dataset.browseClosing='1';Promise.resolve(closeCardBrowseSession()).catch(e=>console.warn('restore browse position',e)).finally(()=>requestAnimationFrame(()=>{delete m.dataset.browseClosing;finishModalClose(id,m)}))}
+function closeModal(id){if(id==='aiModal')return requestCloseAI();const m=document.getElementById(id),browsing=(id==='quickPreviewModal'||id==='detailModal')&&typeof cardBrowseState!=='undefined'&&cardBrowseState.active;if(!browsing)return finishModalClose(id,m);if(m.dataset.browseClosing==='1')return;m.dataset.browseClosing='1';if(id==='quickPreviewModal')finishModalClose(id,m);Promise.resolve(closeCardBrowseSession()).catch(e=>console.warn('restore browse position',e)).finally(()=>{delete m.dataset.browseClosing;if(id!=='quickPreviewModal')requestAnimationFrame(()=>finishModalClose(id,m))})}
 // 大图灯箱
 let _lbSrc='',_lbName='';
 function openLightbox(src,name=''){_lbSrc=src;_lbName=String(name||'');const m=document.getElementById('lbMask');const img=document.getElementById('lbImg');img.src=src;m.classList.add('show')}
@@ -6679,6 +6681,8 @@ setTimeout(fillStAuth,0);
   box-sizing: border-box !important;
 }
 #quickPreviewModal .modal-box {
+  will-change: transform;
+  transform: translateZ(0) scale(.93) translateY(12px) !important;
   width: 100% !important;
   max-width: 460px !important;
   border-top: none !important;
@@ -6688,7 +6692,16 @@ setTimeout(fillStAuth,0);
   box-shadow: 0 28px 72px rgba(44,36,22,.32) !important;
   transform: scale(.93) translateY(12px) !important;
   overflow: hidden !important;
-  max-height: calc(100vh - 80px) !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: calc(100dvh - 80px) !important;
+}
+#quickPreviewModal .modal-body {
+  overscroll-behavior: contain;
+  transform: translateZ(0);
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: calc(100dvh - 150px) !important;
 }
 #quickPreviewModal.show .modal-box {
   transform: scale(1) translateY(0) !important;
@@ -7612,7 +7625,7 @@ setTimeout(fillStAuth,0);
 [data-style]:not([data-style="dream"]) .actbtn:active,[data-style]:not([data-style="dream"]) .fchip:active,[data-style]:not([data-style="dream"]) .lbtn:active,[data-style]:not([data-style="dream"]) .fab-menu button:active{transform:translateY(1px);opacity:.82}
 @media (prefers-reduced-motion:reduce){[data-style] .actbtn,[data-style] .fchip,[data-style] .lbtn,[data-style] #mainFab,[data-style] .fab-menu button{transition:none!important;transform:none!important}}
 
-/* 克克卡库 v4.1.4：所有主题都必须完整显示中文标题，主题只能改变气质，不能把字裁掉 */
+/* 克克卡库 v4.1.5：所有主题都必须完整显示中文标题，主题只能改变气质，不能把字裁掉 */
 .topbar .sbox{flex:1 1 auto!important;min-width:54px!important}
 .topbar>.logo{flex:0 0 clamp(78px,23vw,90px)!important;width:clamp(78px,23vw,90px)!important;min-width:clamp(78px,23vw,90px)!important;max-width:90px!important;overflow:hidden!important;margin-left:0!important;margin-right:0!important}
 .topbar>.logo .logo-line{display:block!important;width:100%!important;max-width:100%!important;overflow:visible!important;padding:0!important}
