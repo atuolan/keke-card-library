@@ -973,7 +973,13 @@ mark{background:rgba(184,150,62,.3);color:var(--gold)}
 [data-style="endlesssummer"] #notebookListHeader,[data-style="framenote"] #notebookListHeader,[data-style="hibernation"] #notebookListHeader{border:2px solid var(--ink2);box-shadow:6px 6px 0 var(--bd)}
 [data-style="framenote"] .note-reading,[data-style="framenote"] .note-accessories,[data-style="framenote"] .note-page-shell textarea,[data-style="framenote"] .cbox,[data-style="framenote"] .note-ta{background-image:repeating-linear-gradient(to bottom,transparent 0,transparent 31px,var(--bd2) 32px);background-size:100% 32px}
 .notebook-memo-preview{font-size:11px;color:var(--ink2);padding:5px 0;border-bottom:1px solid var(--bd2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.notebook-excerpt{color:var(--ink3)!important;font-style:normal}
-</style><style>:root:is([data-style="endlesssummer"],[data-style="framenote"],[data-style="hibernation"]){--p:var(--kaku-page-bg);--p2:var(--kaku-card-bg);--p3:var(--kaku-panel-bg);--p4:var(--kaku-panel-bg);--ink:var(--kaku-body-text);--ink2:var(--kaku-card-body);--ink3:var(--kaku-stats-text);--ink4:var(--kaku-stats-text);--gold:var(--kaku-accent);--red:var(--kaku-danger);--bd:#78909c66;--bd2:#78909c33;--sh:#17283822} [data-style="endlesssummer"] .set-card,[data-style="endlesssummer"] .card-item{border:2px solid var(--gold);border-radius:18px;box-shadow:4px 4px 0 var(--ink2)}[data-style="hibernation"] .set-card,[data-style="hibernation"] .card-item{border:1px solid var(--gold);border-radius:22px;box-shadow:0 5px 18px var(--sh)}[data-style="framenote"] :is(.read-body,.cbox,.note-reading,.note-ta,#notebookRich){line-height:2em;background-image:repeating-linear-gradient(to bottom,transparent 0,transparent calc(2em - 1px),var(--bd2) calc(2em - 1px),var(--bd2) 2em);background-size:100% 2em;background-origin:content-box}.note-combined>summary{cursor:pointer;font-weight:bold;padding:8px}.note-combined:not([open])>*:not(summary){display:none}</style></head>
+</style><style>:root:is([data-style="endlesssummer"],[data-style="framenote"],[data-style="hibernation"]){--p:var(--kaku-page-bg);--p2:var(--kaku-card-bg);--p3:var(--kaku-panel-bg);--p4:var(--kaku-panel-bg);--ink:var(--kaku-body-text);--ink2:var(--kaku-card-body);--ink3:var(--kaku-stats-text);--ink4:var(--kaku-stats-text);--gold:var(--kaku-accent);--red:var(--kaku-danger);--bd:#78909c66;--bd2:#78909c33;--sh:#17283822} [data-style="endlesssummer"] .set-card,[data-style="endlesssummer"] .card-item{border:2px solid var(--gold);border-radius:18px;box-shadow:4px 4px 0 var(--ink2)}[data-style="hibernation"] .set-card,[data-style="hibernation"] .card-item{border:1px solid var(--gold);border-radius:22px;box-shadow:0 5px 18px var(--sh)}[data-style="framenote"] :is(.read-body,.cbox,.note-reading,.note-ta,#notebookRich){line-height:2em;background-image:repeating-linear-gradient(to bottom,transparent 0,transparent calc(2em - 1px),var(--bd2) calc(2em - 1px),var(--bd2) 2em);background-size:100% 2em;background-origin:content-box}.note-combined>summary{cursor:pointer;font-weight:bold;padding:8px}.note-combined:not([open])>*:not(summary){display:none}</style><style id="modal-scroll-audit-fix">
+/* All long dialogs scroll in their own body; the page and mask keep their original layout. */
+.modal-box{max-height:calc(100dvh - 24px)!important;overflow:hidden!important}
+.modal-box > .modal-body{max-height:calc(100dvh - 86px)!important;overflow-y:auto!important;overflow-x:hidden!important;-webkit-overflow-scrolling:touch!important;overscroll-behavior:contain!important;min-height:0!important}
+#quickPreviewModal .modal-body{max-height:calc(100dvh - 130px)!important}
+#pickModal .modal-body{max-height:calc(100dvh - 86px)!important;overflow-y:auto!important}
+</style><style id="detail-open-paint-fix">#detailModal,#detailModal .modal-box{transition:none!important;animation:none!important}#detailModal .modal-box{transform:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;background:var(--kaku-modal-bg)!important}</style></head>
 <body>
 <div id="splashScreen" style="position:fixed;top:0;left:0;right:0;bottom:0;background:var(--p,#F5F0E8);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.5s ease">
   <div style="font-size:48px;font-weight:700;color:var(--ink,#2C2416);margin-bottom:20px;font-family:var(--sf,Georgia,serif)">卡库</div>
@@ -2466,10 +2472,13 @@ ${(()=>{const cls=getCardChatlogs(id);if(!cls.length)return'';return`<div class=
   const navNow=document.getElementById('wbPages-'+id)?.closest('.wb-section')?.querySelector('.wb-version-nav');if(navNow&&priorNavLeft!==undefined)navNow.scrollLeft=priorNavLeft;
   const wbBox=document.getElementById('wbPages-'+id);if(wbBox){const index=wbVersions.findIndex(v=>v.id===card.activeWorldBookVersion);wbBox.scrollLeft=wbBox.clientWidth*Math.max(0,index);requestAnimationFrame(()=>{if(wbBox.isConnected)wbBox.scrollLeft=wbBox.clientWidth*Math.max(0,index)});}
   if(wbBox){let timer;wbBox.addEventListener('scroll',()=>{clearTimeout(timer);timer=setTimeout(async()=>{const index=Math.round(wbBox.scrollLeft/Math.max(1,wbBox.clientWidth)),v=wbVersions[index];if(!v||card.activeWorldBookVersion===v.id)return;card.activeWorldBookVersion=v.id;card.worldBookEntries=v.entries;wbBox.parentElement.querySelectorAll('.wb-version-name').forEach((el,i)=>el.classList.toggle('active',i===index));const full=await dbG('cards',id);if(full){full.activeWorldBookVersion=v.id;full.worldBookEntries=v.entries;await dbP('cards',full)}},120)},{passive:true});}
-  openModal('detailModal');
-  cardBrowseOpened('detail',id);
+  // Finish synchronous detail rendering before exposing the overlay.
   renderLinkSection(card);
   startPresetDetailRender(id);
+  await new Promise(resolve=>requestAnimationFrame(resolve));
+  if(seq!==_detailOpenSeq||_detailCurrentId!==String(id))return;
+  openModal('detailModal');
+  cardBrowseOpened('detail',id);
 
 
   // 详情大封面：从数据库按需取原图替换占位（只临时持有这一张，不影响列表内存）
