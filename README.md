@@ -8,11 +8,11 @@ Android 角色卡与个人资源管理工具，支持分类整理、备份及 Si
 
 ## 📥 下载与安装
 
-### 👉 [点击下载安卓安装包 · 4.1.4](https://github.com/kitten112233/keke-card-library/releases/download/v4.1.4/kaku-4.1.4.apk)
+### 👉 [点击下载安卓安装包 · 4.1.5](https://github.com/kitten112233/keke-card-library/releases/download/v4.1.5/kaku-4.1.5.apk)
 
 **想安装卡库？点击上方下载链接即可，不需要下载源码，也不需要自己编译。**
 
-[查看更新说明与下载页面](https://github.com/kitten112233/keke-card-library/releases/tag/v4.1.4) · [查看全部发布版本](https://github.com/kitten112233/keke-card-library/releases)
+[查看更新说明与下载页面](https://github.com/kitten112233/keke-card-library/releases/tag/v4.1.5) · [查看全部发布版本](https://github.com/kitten112233/keke-card-library/releases)
 
 > 当前提供 **4.1.4 预发布测试版**，适用于 Android 7.0 及以上。已通过发行构建、签名和公开下载文件校验；覆盖安装、数据保留及应用内更新全流程仍待手机实测。
 
