@@ -1481,10 +1481,16 @@ function buildSettingsQuickNav(page){
  const cards=[...body.querySelectorAll('.set-card')].filter(c=>c.dataset.settingsPage===page);
  const zh={'Backup & Restore':'备份与恢复','Data & Safety':'卡库数据与安全','Groups':'分组','Sub Tags':'小标签库','Tag Hierarchy':'标签层级','Sections':'分区','Card Relations':'版本与归属','Style Studio':'风格工坊','AI Organizer':'AI整理','AI Diagnosis':'AI诊断','Import & Folder Scan':'导入与文件夹扫描','Chat Logs':'聊天记录库','Cloud Sync':'云同步','Local Tavern':'酒馆互通','Recycle':'回收站','Danger':'危险操作'};
  nav.innerHTML='<span class="settings-quick-label">快速查找</span>'+cards.map((c,i)=>{const h=c.querySelector('h4'),raw=(h?h.textContent:'').replace(/\?/g,'').trim();let name=raw;Object.keys(zh).some(k=>{if(raw.includes(k)){name=zh[k];return true}return false});if(name===raw)name=raw.replace(/^[^—]+—\s*/,'').replace(/^[^|]+\|\s*/,'').trim();return '<button type="button" class="settings-quick-item" data-quick-index="'+i+'">'+esc(name.slice(0,18))+'</button>'}).join('');
- const box=document.querySelector('#settingsModal .modal-box');nav.querySelectorAll('.settings-quick-item').forEach((b,i)=>b.onclick=e=>{e.stopPropagation();const c=cards[i];if(!c||!box)return;const br=box.getBoundingClientRect(),cr=c.getBoundingClientRect(),header=box.querySelector('.modal-hd');const reserved=(header?header.offsetHeight:0)+nav.offsetHeight+12;const top=Math.max(0,box.scrollTop+(cr.top-br.top)-reserved);box.scrollTo({top,behavior:'smooth'});setTimeout(()=>{c.classList.add('settings-jump-focus');setTimeout(()=>c.classList.remove('settings-jump-focus'),2200)},450)});
+ nav.querySelectorAll('.settings-quick-item').forEach((b,i)=>b.onclick=e=>{e.stopPropagation();jumpToSettingsCard(cards[i])});
+}
+function jumpToSettingsCard(card){
+ const body=document.querySelector('#settingsModal .modal-body');if(!card||!body||!body.contains(card)||!card.getClientRects().length)return;
+ const top=body.scrollTop+card.getBoundingClientRect().top-body.getBoundingClientRect().top-body.clientTop-12;
+ body.scrollTo({top:Math.max(0,top),behavior:'smooth'});
+ card.classList.add('settings-jump-focus');setTimeout(()=>card.classList.remove('settings-jump-focus'),2200);
 }
 function setupSettingsQuickTop(){
- const box=document.querySelector('#settingsModal .modal-box'),mask=document.getElementById('settingsModal');if(!box||!mask)return;
+ const box=document.querySelector('#settingsModal .modal-body'),mask=document.getElementById('settingsModal');if(!box||!mask)return;
  let top=document.getElementById('settingsQuickTop');if(!top){top=document.createElement('button');top.id='settingsQuickTop';top.type='button';top.className='settings-quick-top';top.textContent='↑';top.title='快速回顶';top.onclick=e=>{e.stopPropagation();box.scrollTo({top:0,behavior:'smooth'})};mask.appendChild(top)}
  const update=()=>top.classList.toggle('show',box.scrollTop>80);if(!box.dataset.quickTopBound){box.dataset.quickTopBound='1';box.addEventListener('scroll',update,{passive:true})}update();
 }
@@ -1848,6 +1854,7 @@ async function streamNativeZip(name,entries){
 function renderTabs(){
  if(!S.sections.includes('笔记'))S.sections.push('笔记');
   const bar=document.getElementById('secbar');
+  const scrollLeft=bar.scrollLeft;
   [...bar.querySelectorAll('.stab,.stab-add')].forEach(e=>e.remove());
   const sp=bar.querySelector('.secbar-sp');
   S.sections.forEach(s=>{
@@ -1860,6 +1867,7 @@ function renderTabs(){
   const add=document.createElement('button');
   add.className='stab-add';add.textContent='+';add.title='新建分区';add.onclick=openSettings;bar.querySelector('[data-new-note]')?.remove();
   bar.insertBefore(add,sp);
+  bar.scrollLeft=scrollLeft;
 }
 
 // ============================================================
@@ -3771,7 +3779,23 @@ let total=Math.max(1,Math.round(file.size/3000)); // 先粗估，读到头部 co
   }
   await dbP('meta',{key:'subTagLib',value:S.subTagLib});
 }
-          if(tmp.tagParents){S.tagParents=mergeTagParentsMaps(S.tagParents,tmp.tagParents);await dbP('meta',{key:'tagParents',value:S.tagParents})}
+          const sectionMaps=tmp.tagParentsBySection;
+          if(sectionMaps&&typeof sectionMaps==='object'&&!Array.isArray(sectionMaps)){
+            for(const sec of S.sections){
+              if(!Object.prototype.hasOwnProperty.call(sectionMaps,sec))continue;
+              const incoming=sectionMaps[sec];
+              if(incoming&&typeof incoming==='object'&&!Array.isArray(incoming))S.tagParentsBySection[sec]=mergeTagParentsMaps(tagParentMap(sec),incoming);
+            }
+          }else if(tmp.tagParents){
+            const sections=Array.isArray(tmp.sections)?[...new Set(tmp.sections)].filter(sec=>S.sections.includes(sec)):[];
+            for(const [child,parents] of Object.entries(normalizeTagParentsMap(tmp.tagParents))){
+              const matches=sections.filter(sec=>tmp.subTagLib?.[sec]?.includes(child)&&parents.every(parent=>tmp.mainTagLib?.[sec]?.includes(parent)));
+              const sec=sections.length===1?sections[0]:matches.length===1?matches[0]:null;
+              if(sec)S.tagParentsBySection[sec]=mergeTagParentsMaps(tagParentMap(sec),{[child]:parents});
+            }
+          }
+          S.tagParents=tagParentMap(S.activeSection);
+          await saveTagParentMaps();
         }catch(e){throw new Error('备份头部损坏：'+e.message)}
         const arrIdx=buf.indexOf('[',idx);if(arrIdx<0)throw new Error('备份中缺少 cards 数组');
         buf=buf.slice(arrIdx+1);scanPos=0;
@@ -4526,7 +4550,36 @@ function extractCD(data,card){
 // ============================================================
 // 分区管理
 // ============================================================
-function openSettings(){openModal('settingsModal');requestAnimationFrame(()=>setTimeout(()=>{renderMainTagLib();fillBatchLimits();renderSafetyLibrary();setupSettingsPages();renderAIProfiles();renderAssistantHome();renderFolderLib();renderGroupList();renderSubTagLib();renderTagParentLib();renderSectionList();renderChatlogLib();renderImpSel();renderStyleStudio();const su=document.getElementById('stUrlInput');if(su)su.value=stUrl;loadWebdavConfig();scheduleGridCapacityEstimate()},0))}
+let settingsRefreshSequence=0;
+function openSettings(){
+ const modal=document.getElementById('settingsModal');
+ const body=modal.querySelector('.modal-body');
+ const sequence=++settingsRefreshSequence;
+ const scrollTop=body.scrollTop;
+ setupSettingsPages();
+ if(body.scrollTop!==scrollTop)body.scrollTop=scrollTop;
+ openModal('settingsModal');
+ const refreshSteps=[
+  fillBatchLimits,renderMainTagLib,renderSafetyLibrary,renderAIProfiles,
+  renderAssistantHome,renderFolderLib,renderGroupList,renderSubTagLib,
+  renderTagParentLib,renderSectionList,renderChatlogLib,renderImpSel,renderStyleStudio,
+  ()=>{
+   const input=document.getElementById('stUrlInput');
+   if(input)input.value=stUrl;
+   loadWebdavConfig();
+   scheduleGridCapacityEstimate();
+  }
+ ];
+ let next=0;
+ const refresh=()=>{
+  if(sequence!==settingsRefreshSequence||!modal.classList.contains('show'))return;
+  const currentTop=body.scrollTop;
+  refreshSteps[next++]();
+  if(body.scrollTop!==currentTop)body.scrollTop=currentTop;
+  if(next<refreshSteps.length)requestAnimationFrame(()=>setTimeout(refresh,0));
+ };
+ requestAnimationFrame(()=>setTimeout(refresh,0));
+}
 
 function renderSectionList(){
 const list=document.getElementById('sectionList');if(!list)return;
@@ -5313,11 +5366,11 @@ function aiStoredProfileId(){try{return localStorage.getItem('aiActiveProfileId'
 function aiRememberProfile(id){try{if(id)localStorage.setItem('aiActiveProfileId',String(id))}catch(e){}}
 function aiLoadStore(){try{aiProfiles=JSON.parse(localStorage.getItem('aiProfiles')||'[]')}catch(e){aiProfiles=[]}if(!aiProfiles.length)aiProfiles=[{id:'ai_'+Date.now(),name:'默认配置',url:'',key:'',model:'',temp:1,useTemp:true,max:1200,scope:'standard',fields:['description','worldbook'],requestMode:'single',combinedLimit:120000,prompt:AI_BASE_PROMPT}];if(!localStorage.getItem('aiTempV2')){aiProfiles.forEach(x=>{if(x.temp===.3)x.temp=1;if(x.useTemp==null)x.useTemp=true});localStorage.setItem('aiTempV2','1');aiSaveStore()}const remembered=aiStoredProfileId();if(!aiProfiles.some(x=>x.id===remembered))aiRememberProfile(aiProfiles[0]?.id||'')}
 function aiSaveStore(){try{localStorage.setItem('aiProfiles',JSON.stringify(aiProfiles));const id=document.getElementById('aiProfileSel')?.value;if(id)aiRememberProfile(id)}catch(e){}}
-function renderAIProfiles(){aiLoadStore();loadPromptStore();const el=document.getElementById('aiProfileSel');if(!el)return;const old=el.value||aiStoredProfileId();el.innerHTML=aiProfiles.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('');const keep=aiProfiles.some(x=>x.id===old)?old:(aiProfiles.some(x=>x.id===aiStoredProfileId())?aiStoredProfileId():aiProfiles[0]?.id||'');el.value=keep;aiRememberProfile(keep);loadAIProfileForm();renderPromptTemplates(aiCurrent()?.promptId)}
+function renderAIProfiles(preferredId){aiLoadStore();loadPromptStore();const el=document.getElementById('aiProfileSel');if(!el)return;const old=preferredId||el.value||aiStoredProfileId();el.innerHTML=aiProfiles.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('');const keep=aiProfiles.some(x=>x.id===old)?old:(aiProfiles.some(x=>x.id===aiStoredProfileId())?aiStoredProfileId():aiProfiles[0]?.id||'');el.value=keep;aiRememberProfile(keep);loadAIProfileForm();renderPromptTemplates(aiCurrent()?.promptId)}
 function aiCurrent(){const id=document.getElementById('aiProfileSel')?.value||aiStoredProfileId();return aiProfiles.find(x=>x.id===id)||aiProfiles[0]}
 function loadAIProfileForm(){const el=document.getElementById('aiProfileSel');if(el&&el.value)aiRememberProfile(el.value);const x=aiCurrent();if(!x)return;aiName.value=x.name||'';aiType.value=x.type||'openai';aiUrl.value=x.url||'';aiKey.value=x.key||'';aiModel.value=x.model||'';aiTemp.value=x.temp??1;aiUseTemp.checked=x.useTemp!==false;toggleAITemp();aiMax.value=x.max||1200;aiRequestMode.value=x.requestMode||'single';aiCombinedLimit.value=x.combinedLimit||120000;aiScope.value=x.scope||'standard';renderAIModelSelect(x.models||[],x.model||'');document.querySelectorAll('#aiCustomFields input').forEach(b=>b.checked=(x.fields||[]).includes(b.value));const wm=document.getElementById('aiWorldbookMode');if(wm)wm.value=x.worldbookMode||((x.fields||[]).includes('worldbook')?'all':'none');toggleAICustom()}
 function toggleAICustom(){const v=aiScope.value,e=document.getElementById('aiCustomFields'),d=document.getElementById('aiScopeDesc');if(e)e.style.display=(v==='custom'?'flex':'none');if(d)d.textContent=v==='saving'?'读取名称与简介，适合快速粗分类，Token消耗最低。':v==='standard'?'读取名称、简介，以及 enabled 不为 false 的启用世界书条目；关闭的世界书不会发送。':v==='full'?'读取简介、性格、场景、对白和全部世界书（包括关闭条目），不主动截断。':'普通字段可单独勾选；世界书可选择不读取、仅启用条目或全部条目。'}
-function newAIProfile(){const next={id:'ai_'+Date.now(),name:'新配置',url:'',key:'',model:'',temp:1,useTemp:true,max:1200,scope:'standard',fields:['description','worldbook'],requestMode:'single',combinedLimit:120000,prompt:AI_BASE_PROMPT};aiProfiles.push(next);aiRememberProfile(next.id);aiSaveStore();renderAIProfiles()}
+function newAIProfile(){const next={id:'ai_'+Date.now(),name:'新配置',url:'',key:'',model:'',temp:1,useTemp:true,max:1200,scope:'standard',fields:['description','worldbook'],requestMode:'single',combinedLimit:120000,prompt:AI_BASE_PROMPT};aiProfiles.push(next);aiSaveStore();renderAIProfiles(next.id)}
 function saveAIProfile(){const x=aiCurrent();if(!x)return;x.name=aiName.value.trim()||'未命名配置';x.type=aiType.value;x.url=aiUrl.value.trim();x.key=aiKey.value.trim();x.model=aiModel.value.trim();x.models=Array.isArray(x.models)?x.models:[];x.temp=Number(aiTemp.value);x.useTemp=aiUseTemp.checked;x.max=Math.max(256,Math.min(131072,Number(aiMax.value)||1200));x.requestMode=aiRequestMode.value||'single';x.combinedLimit=Math.max(1000,Number(aiCombinedLimit.value)||120000);x.scope=aiScope.value;x.promptId=aiPromptSel.value;x.fields=[...document.querySelectorAll('#aiCustomFields input:checked')].map(b=>b.value);x.worldbookMode=document.getElementById('aiWorldbookMode')?.value||'none';aiRememberProfile(x.id);aiSaveStore();renderAIProfiles();showToast('AI 配置已保存')}
 async function deleteAIProfile(){if(aiProfiles.length<=1)return showToast('至少保留一个配置');const x=aiCurrent();if(!await confirmDialog('删除AI服务配置“'+x.name+'”？',{danger:true,okText:'删除配置'}))return;aiProfiles=aiProfiles.filter(y=>y.id!==x.id);aiRememberProfile(aiProfiles[0]?.id||'');aiSaveStore();renderAIProfiles()}
 function aiDecodeB64(s){const u=Uint8Array.from(atob(s||''),c=>c.charCodeAt(0));return new TextDecoder().decode(u)}
@@ -6056,14 +6109,15 @@ async function writeZipEntryNative(card,name){const DL=window.AndroidDL;if(!DL.b
 function exportExt(card){const t=String(card?.fileType||'').toUpperCase();return t==='PNG'?'png':t==='JSON'?'json':t==='DOCX'?'docx':t==='WEBP'?'webp':t==='JPG'||t==='JPEG'?'jpg':'txt'}
 function safeExportName(card,ext){const raw=String(card?.name||'card').replace(/[\/\\:*?"<>|\u0000-\u001f]/g,'_').trim()||'card';return raw+'.'+(ext||exportExt(card))}
 function transferRemaining(t){const done=new Set(t.completed||[]);return t.ids.filter(id=>!done.has(id))}
-function subsetBackupMeta(ids){const set=new Set(ids),cards=S.cards.filter(c=>set.has(c.id)),secs=[...new Set(cards.map(c=>c.section).filter(Boolean))],groups=S.groups.filter(g=>cards.some(c=>cardHasGroup(c,g.id))),main={},sub={};for(const sec of secs){main[sec]=S.mainTagLib[sec]||[];sub[sec]=S.subTagLib[sec]||[]}return {sections:secs,groups,mainTagLib:main,subTagLib:sub,tagParents:S.tagParents}}
+function subsetBackupMeta(ids){const set=new Set(ids),cards=S.cards.filter(c=>set.has(c.id)),secs=[...new Set(cards.map(c=>c.section).filter(Boolean))],groups=S.groups.filter(g=>cards.some(c=>cardHasGroup(c,g.id))),main={},sub={};for(const sec of secs){main[sec]=S.mainTagLib[sec]||[];sub[sec]=S.subTagLib[sec]||[]}const tagParentsBySection=Object.fromEntries(secs.map(sec=>[sec,normalizeTagParentsMap(tagParentMap(sec))]));
+ return {sections:secs,groups,mainTagLib:main,subTagLib:sub,tagParentsBySection}}
 async function nativeWriteText(DL,text){const bytes=new TextEncoder().encode(text),CH=192*1024;for(let i=0;i<bytes.length;i+=CH){const a=bytes.subarray(i,Math.min(bytes.length,i+CH));let bin='';for(let j=0;j<a.length;j++)bin+=String.fromCharCode(a[j]);if(!DL.appendChunk(btoa(bin)))return false;await sleep(0)}return true}
-async function runBackupTask(t){const remain=transferRemaining(t),segment=remain.slice(0,TRANSFER_SEGMENT);if(!segment.length)return;const part=(t.part||0)+1,name=`${t.baseName||'卡库备份'}_第${part}部分_${segment.length}项.json`,DL=window.AndroidDL,meta=subsetBackupMeta(segment);if(!DL?.beginFile||!DL.beginFile(name))throw new Error('无法创建备份文件');const head=JSON.stringify({version:3,exportedAt:Date.now(),count:segment.length,partial:t.ids.length!==segment.length,sections:meta.sections,groups:meta.groups,mainTagLib:meta.mainTagLib,subTagLib:meta.subTagLib,tagParents:meta.tagParents}).replace(/}$/,',"cards":[');if(!await nativeWriteText(DL,head)){try{DL.abortFile&&DL.abortFile()}catch(e){}throw new Error('写入备份头失败')}let written=0;for(let i=0;i<segment.length;i++){const c=await dbG('cards',segment[i]);if(!c){t.failed.push({id:segment[i],reason:'记录不存在'});continue}if(!await nativeWriteText(DL,(written?',':'')+JSON.stringify(c))){try{DL.abortFile&&DL.abortFile()}catch(e){}throw new Error('写入备份卡片失败')}written++;busyUpdate((t.completed||[]).length+i+1,t.ids.length,c.name||'');await sleep(0)}if(!await nativeWriteText(DL,']}')||!DL.endFile())throw new Error('备份封口失败');t.completed.push(...segment);t.part=part;await saveTransferTask(t)}
+async function runBackupTask(t){const remain=transferRemaining(t),segment=remain.slice(0,TRANSFER_SEGMENT);if(!segment.length)return;const part=(t.part||0)+1,name=`${t.baseName||'卡库备份'}_第${part}部分_${segment.length}项.json`,DL=window.AndroidDL,meta=subsetBackupMeta(segment);if(!DL?.beginFile||!DL.beginFile(name))throw new Error('无法创建备份文件');const head=JSON.stringify({version:3,exportedAt:Date.now(),count:segment.length,partial:t.ids.length!==segment.length,sections:meta.sections,groups:meta.groups,mainTagLib:meta.mainTagLib,subTagLib:meta.subTagLib,tagParentsBySection:meta.tagParentsBySection}).replace(/}$/,',"cards":[');if(!await nativeWriteText(DL,head)){try{DL.abortFile&&DL.abortFile()}catch(e){}throw new Error('写入备份头失败')}let written=0;for(let i=0;i<segment.length;i++){const c=await dbG('cards',segment[i]);if(!c){t.failed.push({id:segment[i],reason:'记录不存在'});continue}if(!await nativeWriteText(DL,(written?',':'')+JSON.stringify(c))){try{DL.abortFile&&DL.abortFile()}catch(e){}throw new Error('写入备份卡片失败')}written++;busyUpdate((t.completed||[]).length+i+1,t.ids.length,c.name||'');await sleep(0)}if(!await nativeWriteText(DL,']}')||!DL.endFile())throw new Error('备份封口失败');t.completed.push(...segment);t.part=part;await saveTransferTask(t)}
 async function runOriginalTask(t){const remain=transferRemaining(t);for(let i=0;i<remain.length;i++){const c=await dbG('cards',remain[i]);if(!c?.rawData){t.failed.push({id:remain[i],reason:'缺少原始文件'});t.completed.push(remain[i]);await saveTransferTask(t);continue}busyUpdate(t.completed.length+1,t.ids.length,c.name||'');Object.assign(c,await prepareOriginalForOutput(c));await writeRawNative(c,(t.prefixSection?'['+(c.section||'')+'] ':'')+safeExportName(c,exportExt(c)));t.completed.push(c.id);await saveTransferTask(t);await sleep(30)}}
 async function runZipTask(t){const remain=transferRemaining(t),segment=remain.slice(0,TRANSFER_SEGMENT);if(!segment.length)return;const DL=window.AndroidDL,part=(t.part||0)+1,name=`${t.baseName||'卡库原始文件'}_第${part}部分_${segment.length}项.zip`;if(!DL?.beginZip||!DL.beginZip(name))throw new Error('无法创建 ZIP');try{const names=new Set();for(let i=0;i<segment.length;i++){const c=await dbG('cards',segment[i]);if(!c?.rawData)continue;Object.assign(c,await prepareOriginalForOutput(c));let nm=safeExportName(c,exportExt(c)),base=nm,k=1;while(names.has(nm))nm=base.replace(/(\.[^.]+)$/,'_'+k+++'$1');names.add(nm);busyUpdate(t.completed.length+i+1,t.ids.length,c.name||'');await writeZipEntryNative(c,nm);await sleep(0)}if(!DL.finishZip())throw new Error('ZIP 封口失败')}catch(e){try{DL.abortZip()}catch(x){}throw e}t.completed.push(...segment);t.part=part;await saveTransferTask(t)}
 async function executeBrowserTransferTask(t){
  const ids=transferRemaining(t);if(t.type==='zip')throw new Error('电脑浏览器ZIP打包暂未开放；可使用“原始文件”逐项导出');
- if(t.type==='backup'){const meta=subsetBackupMeta(ids),cards=[];for(let i=0;i<ids.length;i++){const c=await dbG('cards',ids[i]);if(c)cards.push(c);busyUpdate(i+1,ids.length,c?.name||'');await sleep(0)}dlB(new Blob([JSON.stringify({version:3,exportedAt:Date.now(),count:cards.length,sections:meta.sections,groups:meta.groups,mainTagLib:meta.mainTagLib,subTagLib:meta.subTagLib,tagParents:meta.tagParents,cards})],{type:'application/json'}),(t.baseName||'卡库备份')+'.json');t.completed.push(...ids);return}
+ if(t.type==='backup'){const meta=subsetBackupMeta(ids),cards=[];for(let i=0;i<ids.length;i++){const c=await dbG('cards',ids[i]);if(c)cards.push(c);busyUpdate(i+1,ids.length,c?.name||'');await sleep(0)}dlB(new Blob([JSON.stringify({version:3,exportedAt:Date.now(),count:cards.length,sections:meta.sections,groups:meta.groups,mainTagLib:meta.mainTagLib,subTagLib:meta.subTagLib,tagParentsBySection:meta.tagParentsBySection,cards})],{type:'application/json'}),(t.baseName||'卡库备份')+'.json');t.completed.push(...ids);return}
  if(t.type==='originals'){for(let i=0;i<ids.length;i++){const c=await dbG('cards',ids[i]);if(c?.rawData){Object.assign(c,await prepareOriginalForOutput(c));dlB(du2b(c.rawData),(t.prefixSection?'['+(c.section||'')+'] ':'')+safeExportName(c,exportExt(c)))}else t.failed.push({id:ids[i],reason:'缺少原始文件'});t.completed.push(ids[i]);busyUpdate(i+1,ids.length,c?.name||'');await sleep(120)}return}
  throw new Error('未知任务类型')}
 async function executeTransferTask(t){if(transferRunning)return;transferRunning=true;t.status='running';await saveTransferTask(t);closeModal('transferModal');busyShow(t.title,'准备中…');try{if(!window.AndroidDL?.beginFile){await executeBrowserTransferTask(t)}while(transferRemaining(t).length){if(t.type==='backup')await runBackupTask(t);else if(t.type==='originals')await runOriginalTask(t);else if(t.type==='zip')await runZipTask(t);else throw new Error('未知任务类型')}t.status='completed';if(t.cursorUpdate){safetyOriginalCursors[t.cursorUpdate.section]=t.cursorUpdate.next>=t.cursorUpdate.total?0:t.cursorUpdate.next;saveSafetyOriginalCursors()}await saveTransferTask(t);busyHide();transferRunning=false;await dbD('meta',transferTaskKey(t.id));await dbD('meta','transferSummary');transferSummary=null;updateTransferChip();exitSelectMode();renderGrid();showToast('导出完成：'+t.ids.length+' 项'+((t.part||0)>1?'，'+t.part+' 个部分':''))}catch(e){t.status='failed';t.error=e.message||String(e);await saveTransferTask(t);busyHide();transferRunning=false;showToast('任务已暂停：'+t.error);openTransferCenter()}}
@@ -6216,7 +6270,7 @@ function renderManualRoot(){const b=document.getElementById('manualBody');if(!b)
 function renderManualFAQ(){const b=document.getElementById('manualBody');if(!b)return;b.innerHTML='<button class="actbtn manual-back" onclick="renderManualRoot()">← 返回说明书首页</button><div class="manual-faq-list">'+MANUAL_FAQ.map((x,i)=>`<button class="manual-faq-q" onclick="showManualFAQ(${i})">${x.q}<span>›</span></button>`).join('')+'</div>'}
 function showManualFAQ(i){const b=document.getElementById('manualBody'),x=MANUAL_FAQ[i];if(!b||!x)return;b.innerHTML=`<button class="actbtn manual-back" onclick="renderManualFAQ()">← 返回常见问题</button><div class="manual-detail"><h3>${x.q}</h3><p>${x.a}</p></div>`}
 function renderManualHome(){const b=document.getElementById('manualBody');if(!b)return;b.innerHTML='<button class="actbtn manual-back" onclick="renderManualRoot()">← 返回说明书首页</button><div class="manual-cats">'+MANUAL_SECTIONS.map(x=>`<button class="manual-cat" onclick="renderManualSection('${x.id}')"><b>${x.icon} ${x.title}</b><small>${x.desc}</small></button>`).join('')+'</div>'}
-function openManualSettingsPath(page,needle){openSettings();switchSettingsPage(page);const box=document.querySelector('#settingsModal .modal-box'),nav=document.getElementById('settingsPageNav'),cards=[...document.querySelectorAll('#settingsModal .set-card')];let target=null;for(const c of cards){const h=c.querySelector('h4');if((h?h.textContent:'').toLowerCase().includes(String(needle||'').toLowerCase())){target=c;break}}if(!box||!target)return;const br=box.getBoundingClientRect(),tr=target.getBoundingClientRect(),header=box.querySelector('.modal-hd'),reserved=(header?header.offsetHeight:0)+(nav?nav.offsetHeight:0)+12;const top=Math.max(0,box.scrollTop+(tr.top-br.top)-reserved);box.scrollTo({top,behavior:'smooth'});setTimeout(()=>{target.classList.add('settings-jump-focus');setTimeout(()=>target.classList.remove('settings-jump-focus'),2200)},450)}
+function openManualSettingsPath(page,needle){openSettings();switchSettingsPage(page);const key=String(needle||'').toLowerCase();const target=[...document.querySelectorAll('#settingsModal .set-card')].find(c=>c.dataset.settingsPage===page&&(c.querySelector('h4')?.textContent||'').toLowerCase().includes(key));jumpToSettingsCard(target)}
 function decorateManualPaths(root){root.querySelectorAll('.manual-path').forEach(el=>{const text=el.textContent.trim();let page='',needle='';if(/设置\s*→\s*Backup & Restore/i.test(text)){page='safety';needle='Backup & Restore'}else if(/设置\s*→\s*Data & Safety/i.test(text)){page='safety';needle='Data & Safety'}else if(/设置\s*→\s*Chat Logs/i.test(text)){page='smart';needle='Chat Logs'}else if(/设置\s*→\s*AI Organizer/i.test(text)){page='smart';needle='AI Organizer'}else if(/设置\s*→\s*Local Tavern/i.test(text)){page='smart';needle='Local Tavern'}else if(/设置\s*→\s*Sections/i.test(text)){page='organize';needle='Sections'}if(page){const b=document.createElement('button');b.className='manual-path manual-path-btn';b.textContent=text+' · 打开位置';b.onclick=()=>openManualSettingsPath(page,needle);el.replaceWith(b)}})}
 function renderManualSection(id){const b=document.getElementById('manualBody');if(!b)return;if(id==='all'){b.innerHTML='<button class="actbtn manual-back" onclick="renderManualHome()">← 返回分类</button>'+MANUAL_SECTIONS.filter(x=>x.id!=='all').map(x=>`<details open><summary><b>${x.icon} ${x.title}</b></summary><div class="manual-detail">${MANUAL_CONTENT[x.id].html}</div></details>`).join('');decorateManualPaths(b);return}const x=MANUAL_CONTENT[id];if(!x)return; b.innerHTML=`<button class="actbtn manual-back" onclick="renderManualHome()">← 返回分类</button><div class="manual-detail"><h3>${x.title}</h3>${x.html}</div>`;decorateManualPaths(b)}
 function fabAI(){toggleFabMenu(false);const ids=S.selectMode?[...S.selectedIds]:[];if(S.selectMode&&!ids.length)return showToast('请先选择卡片，或退出选择模式后打开完整列表');if(S.selectMode){exitSelectMode();renderGrid()}openAIOrganizer(ids.length?ids:undefined)}
