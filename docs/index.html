@@ -2482,11 +2482,12 @@ ${(()=>{const cls=getCardChatlogs(id);if(!cls.length)return'';return`<div class=
   if(wbBox){let timer;wbBox.addEventListener('scroll',()=>{clearTimeout(timer);timer=setTimeout(async()=>{const index=Math.round(wbBox.scrollLeft/Math.max(1,wbBox.clientWidth)),v=wbVersions[index];if(!v||card.activeWorldBookVersion===v.id)return;card.activeWorldBookVersion=v.id;card.worldBookEntries=v.entries;wbBox.parentElement.querySelectorAll('.wb-version-name').forEach((el,i)=>el.classList.toggle('active',i===index));const full=await dbG('cards',id);if(full){full.activeWorldBookVersion=v.id;full.worldBookEntries=v.entries;await dbP('cards',full)}},120)},{passive:true});}
   // Finish synchronous detail rendering before exposing the overlay.
   renderLinkSection(card);
-  startPresetDetailRender(id);
   await new Promise(resolve=>requestAnimationFrame(resolve));
   if(seq!==_detailOpenSeq||_detailCurrentId!==String(id))return;
   openModal('detailModal');
   cardBrowseOpened('detail',id);
+  // 预设条目分批渲染会检查弹窗已带 show；必须在 openModal 之后启动，否则第一批就退出，列表一直是空的。
+  startPresetDetailRender(id);
 
 
   // 详情大封面：从数据库按需取原图替换占位（只临时持有这一张，不影响列表内存）
