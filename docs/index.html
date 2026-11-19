@@ -183,7 +183,7 @@ body{font-family:var(--ss);background:var(--p);color:var(--ink);display:flex;fle
 #pickModal{z-index:560}
 #pickModal .modal-box{height:auto;max-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));overflow:hidden}
 #pickModal .modal-body{max-height:none;overflow:visible}
-.modal-box{background:var(--p2);border-top:2px solid var(--ink);width:100%;max-width:640px;height:min(92vh,calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)));max-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));overflow:hidden;padding:0;transform:translateY(28px);transition:transform .25s;-webkit-overflow-scrolling:touch}
+.modal-box{background:var(--p2);border-top:2px solid var(--ink);width:100%;max-width:640px;height:auto;min-height:0;max-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));overflow:hidden;padding:0;transform:translateY(28px);transition:transform .25s;-webkit-overflow-scrolling:touch}
 .modal-mask.show .modal-box{transform:translateY(0)}
 .modal-mask.no-motion,.modal-mask.no-motion .modal-box{transition:none!important}
 @media(min-width:640px){.modal-mask{align-items:center}.modal-box{border:2px solid var(--ink);max-height:88vh}}
