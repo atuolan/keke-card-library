@@ -1,7 +1,7 @@
 {
   "versionCode": 416,
   "versionName": "4.1.6",
-  "apkUrl": "https://github.com/kitten112233/keke-card-library/releases/download/v4.1.6/kaku-4.1.6.apk",
+  "apkUrl": "https://github.com/kitten112233/keke-card-library/releases/download/v4.1.6/4.1.6.apk",
   "sha256": "14be13c40d5ff1caca24bae27480514e9d0f72b6498addbe9bc65ec5927c40c5",
   "notes": "修复云同步重复上传问题，优化云端同步文件命名；修复世界书条目灯状态无法保存的问题。"
 }
