@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>克克卡库 · v4.1.4</title>
+<title>克克卡库 · v4.1.6</title>
 <style>
 :root{
   --p:#F2ECE2;--p2:#FFFDF8;--p3:#E8DDCC;--p4:#D6C6B2;
@@ -181,7 +181,9 @@ body{font-family:var(--ss);background:var(--p);color:var(--ink);display:flex;fle
 .modal-mask.show{opacity:1;pointer-events:all}
 /* pickModal 常作为详情页之上的二级弹窗（版本管理等），提高层级避免被 detailModal 盖住 */
 #pickModal{z-index:560}
-.modal-box{background:var(--p2);border-top:2px solid var(--ink);width:100%;max-width:640px;max-height:92vh;overflow-y:auto;padding:0;transform:translateY(28px);transition:transform .25s;-webkit-overflow-scrolling:touch}
+#pickModal .modal-box{height:auto;max-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));overflow:hidden}
+#pickModal .modal-body{max-height:none;overflow:visible}
+.modal-box{background:var(--p2);border-top:2px solid var(--ink);width:100%;max-width:640px;height:auto;min-height:0;max-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));overflow:hidden;padding:0;transform:translateY(28px);transition:transform .25s;-webkit-overflow-scrolling:touch}
 .modal-mask.show .modal-box{transform:translateY(0)}
 .modal-mask.no-motion,.modal-mask.no-motion .modal-box{transition:none!important}
 @media(min-width:640px){.modal-mask{align-items:center}.modal-box{border:2px solid var(--ink);max-height:88vh}}
@@ -190,7 +192,7 @@ body{font-family:var(--ss);background:var(--p);color:var(--ink);display:flex;fle
 .modal-title{font-size:11px;font-weight:700;font-family:var(--sf);letter-spacing:.1em;color:var(--ink);text-transform:uppercase;flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:8px}
 .mclose{background:var(--p3);border:1px solid var(--bd);color:var(--ink);font-size:14px;cursor:pointer;padding:4px 11px;border-radius:var(--r);font-weight:700;min-width:32px;text-align:center;flex-shrink:0;line-height:1.2;transition:all .2s}
 .mclose:hover{background:var(--ink);color:var(--p)}
-.modal-body{padding:12px 14px 40px}
+.modal-body{padding:12px 14px 40px;overflow-y:auto;max-height:calc(100% - 54px);-webkit-overflow-scrolling:touch}
 /* ─── 备注横幅 ─── */
 .note-banner{background:var(--kaku-modal-bg);color:var(--kaku-modal-text);border-top:1px solid var(--bd);border-bottom:1px solid var(--bd);border-left:6px solid var(--kaku-note-text);padding:8px 14px 9px;font-size:11px;font-family:var(--sf);line-height:1.5;display:none}
 .note-banner.show{display:block}
@@ -971,7 +973,13 @@ mark{background:rgba(184,150,62,.3);color:var(--gold)}
 [data-style="endlesssummer"] #notebookListHeader,[data-style="framenote"] #notebookListHeader,[data-style="hibernation"] #notebookListHeader{border:2px solid var(--ink2);box-shadow:6px 6px 0 var(--bd)}
 [data-style="framenote"] .note-reading,[data-style="framenote"] .note-accessories,[data-style="framenote"] .note-page-shell textarea,[data-style="framenote"] .cbox,[data-style="framenote"] .note-ta{background-image:repeating-linear-gradient(to bottom,transparent 0,transparent 31px,var(--bd2) 32px);background-size:100% 32px}
 .notebook-memo-preview{font-size:11px;color:var(--ink2);padding:5px 0;border-bottom:1px solid var(--bd2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.notebook-excerpt{color:var(--ink3)!important;font-style:normal}
-</style><style>:root:is([data-style="endlesssummer"],[data-style="framenote"],[data-style="hibernation"]){--p:var(--kaku-page-bg);--p2:var(--kaku-card-bg);--p3:var(--kaku-panel-bg);--p4:var(--kaku-panel-bg);--ink:var(--kaku-body-text);--ink2:var(--kaku-card-body);--ink3:var(--kaku-stats-text);--ink4:var(--kaku-stats-text);--gold:var(--kaku-accent);--red:var(--kaku-danger);--bd:#78909c66;--bd2:#78909c33;--sh:#17283822} [data-style="endlesssummer"] .set-card,[data-style="endlesssummer"] .card-item{border:2px solid var(--gold);border-radius:18px;box-shadow:4px 4px 0 var(--ink2)}[data-style="hibernation"] .set-card,[data-style="hibernation"] .card-item{border:1px solid var(--gold);border-radius:22px;box-shadow:0 5px 18px var(--sh)}[data-style="framenote"] :is(.read-body,.cbox,.note-reading,.note-ta,#notebookRich){line-height:2em;background-image:repeating-linear-gradient(to bottom,transparent 0,transparent calc(2em - 1px),var(--bd2) calc(2em - 1px),var(--bd2) 2em);background-size:100% 2em;background-origin:content-box}.note-combined>summary{cursor:pointer;font-weight:bold;padding:8px}.note-combined:not([open])>*:not(summary){display:none}</style></head>
+</style><style>:root:is([data-style="endlesssummer"],[data-style="framenote"],[data-style="hibernation"]){--p:var(--kaku-page-bg);--p2:var(--kaku-card-bg);--p3:var(--kaku-panel-bg);--p4:var(--kaku-panel-bg);--ink:var(--kaku-body-text);--ink2:var(--kaku-card-body);--ink3:var(--kaku-stats-text);--ink4:var(--kaku-stats-text);--gold:var(--kaku-accent);--red:var(--kaku-danger);--bd:#78909c66;--bd2:#78909c33;--sh:#17283822} [data-style="endlesssummer"] .set-card,[data-style="endlesssummer"] .card-item{border:2px solid var(--gold);border-radius:18px;box-shadow:4px 4px 0 var(--ink2)}[data-style="hibernation"] .set-card,[data-style="hibernation"] .card-item{border:1px solid var(--gold);border-radius:22px;box-shadow:0 5px 18px var(--sh)}[data-style="framenote"] :is(.read-body,.cbox,.note-reading,.note-ta,#notebookRich){line-height:2em;background-image:repeating-linear-gradient(to bottom,transparent 0,transparent calc(2em - 1px),var(--bd2) calc(2em - 1px),var(--bd2) 2em);background-size:100% 2em;background-origin:content-box}.note-combined>summary{cursor:pointer;font-weight:bold;padding:8px}.note-combined:not([open])>*:not(summary){display:none}</style><style id="modal-scroll-audit-fix">
+/* All long dialogs scroll in their own body; the page and mask keep their original layout. */
+.modal-box{max-height:calc(100dvh - 24px)!important;overflow:hidden!important}
+.modal-box > .modal-body{max-height:calc(100dvh - 86px)!important;overflow-y:auto!important;overflow-x:hidden!important;-webkit-overflow-scrolling:touch!important;overscroll-behavior:contain!important;min-height:0!important}
+#quickPreviewModal .modal-body{max-height:calc(100dvh - 130px)!important}
+#pickModal .modal-body{max-height:calc(100dvh - 86px)!important;overflow-y:auto!important}
+</style><style id="detail-open-paint-fix">#detailModal,#detailModal .modal-box{transition:none!important;animation:none!important}#detailModal .modal-box{transform:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;background:var(--kaku-modal-bg)!important}</style></head>
 <body>
 <div id="splashScreen" style="position:fixed;top:0;left:0;right:0;bottom:0;background:var(--p,#F5F0E8);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.5s ease">
   <div style="font-size:48px;font-weight:700;color:var(--ink,#2C2416);margin-bottom:20px;font-family:var(--sf,Georgia,serif)">卡库</div>
@@ -982,7 +990,7 @@ mark{background:rgba(184,150,62,.3);color:var(--gold)}
 </div>
 
 <div class="topbar">
-  <div class="logo" aria-label="克克卡库 4.1.3"><span class="logo-line"><span class="logo-m">克克卡库</span></span><span class="logo-s"><span class="logo-en">CARD ARCHIVE</span><span class="logo-v">v4.1.4</span></span></div>
+  <div class="logo" aria-label="克克卡库 4.1.6"><span class="logo-line"><span class="logo-m">克克卡库</span></span><span class="logo-s"><span class="logo-en">CARD ARCHIVE</span><span class="logo-v">v4.1.6</span></span></div>
   <div class="sbox"><input type="text" id="searchInput" placeholder="Search cards..." autocomplete="off"><span class="sico">⌕</span></div>
   <button class="hbtn" id="selectModeBtn" onclick="toggleSelectMode()">选择</button>
   <button class="hbtn theme-btn" id="themeBtn" onclick="toggleTheme()"><span class="theme-symbol">✣</span></button>
@@ -1473,10 +1481,16 @@ function buildSettingsQuickNav(page){
  const cards=[...body.querySelectorAll('.set-card')].filter(c=>c.dataset.settingsPage===page);
  const zh={'Backup & Restore':'备份与恢复','Data & Safety':'卡库数据与安全','Groups':'分组','Sub Tags':'小标签库','Tag Hierarchy':'标签层级','Sections':'分区','Card Relations':'版本与归属','Style Studio':'风格工坊','AI Organizer':'AI整理','AI Diagnosis':'AI诊断','Import & Folder Scan':'导入与文件夹扫描','Chat Logs':'聊天记录库','Cloud Sync':'云同步','Local Tavern':'酒馆互通','Recycle':'回收站','Danger':'危险操作'};
  nav.innerHTML='<span class="settings-quick-label">快速查找</span>'+cards.map((c,i)=>{const h=c.querySelector('h4'),raw=(h?h.textContent:'').replace(/\?/g,'').trim();let name=raw;Object.keys(zh).some(k=>{if(raw.includes(k)){name=zh[k];return true}return false});if(name===raw)name=raw.replace(/^[^—]+—\s*/,'').replace(/^[^|]+\|\s*/,'').trim();return '<button type="button" class="settings-quick-item" data-quick-index="'+i+'">'+esc(name.slice(0,18))+'</button>'}).join('');
- const box=document.querySelector('#settingsModal .modal-box');nav.querySelectorAll('.settings-quick-item').forEach((b,i)=>b.onclick=e=>{e.stopPropagation();const c=cards[i];if(!c||!box)return;const br=box.getBoundingClientRect(),cr=c.getBoundingClientRect(),header=box.querySelector('.modal-hd');const reserved=(header?header.offsetHeight:0)+nav.offsetHeight+12;const top=Math.max(0,box.scrollTop+(cr.top-br.top)-reserved);box.scrollTo({top,behavior:'smooth'});setTimeout(()=>{c.classList.add('settings-jump-focus');setTimeout(()=>c.classList.remove('settings-jump-focus'),2200)},450)});
+ nav.querySelectorAll('.settings-quick-item').forEach((b,i)=>b.onclick=e=>{e.stopPropagation();jumpToSettingsCard(cards[i])});
+}
+function jumpToSettingsCard(card){
+ const body=document.querySelector('#settingsModal .modal-body');if(!card||!body||!body.contains(card)||!card.getClientRects().length)return;
+ const top=body.scrollTop+card.getBoundingClientRect().top-body.getBoundingClientRect().top-body.clientTop-12;
+ body.scrollTo({top:Math.max(0,top),behavior:'smooth'});
+ card.classList.add('settings-jump-focus');setTimeout(()=>card.classList.remove('settings-jump-focus'),2200);
 }
 function setupSettingsQuickTop(){
- const box=document.querySelector('#settingsModal .modal-box'),mask=document.getElementById('settingsModal');if(!box||!mask)return;
+ const box=document.querySelector('#settingsModal .modal-body'),mask=document.getElementById('settingsModal');if(!box||!mask)return;
  let top=document.getElementById('settingsQuickTop');if(!top){top=document.createElement('button');top.id='settingsQuickTop';top.type='button';top.className='settings-quick-top';top.textContent='↑';top.title='快速回顶';top.onclick=e=>{e.stopPropagation();box.scrollTo({top:0,behavior:'smooth'})};mask.appendChild(top)}
  const update=()=>top.classList.toggle('show',box.scrollTop>80);if(!box.dataset.quickTopBound){box.dataset.quickTopBound='1';box.addEventListener('scroll',update,{passive:true})}update();
 }
@@ -1708,12 +1722,12 @@ function styleAIBriefText(){
  const name=(document.getElementById('styleProfileName')?.value||'我的风格').trim()||'我的风格',base=currentEditorBase();
  const palette=styleTemplate(editorPaletteVars('light'),name,base,editorPaletteVars('dark'));
  return [
- '你是克克卡库 v4.1.4 的界面风格设计师。请根据我接下来补充的审美要求，设计一份可直接导入“风格工坊”的完整 CSS。','','【应用与运行环境】',
+ '你是克克卡库 v4.1.6 的界面风格设计师。请根据我接下来补充的审美要求，设计一份可直接导入“风格工坊”的完整 CSS。','','【应用与运行环境】',
  '- 克克卡库是单页、离线优先的 Android WebView 卡库，界面代码位于同一份 HTML 中。','- 当前视觉底稿：'+BUILTIN_STYLE_NAMES[base]+'（代码值 '+base+'）。','- 目标风格名称：'+name+'。','- 只能修改外观，不能修改、隐藏、删除或读取卡片正文、世界书、聊天记录与本地数据。','- 快速预览是轻量浏览，只呈现基础信息、标签、版本、链接、备注、附加区与详情入口；不得显示或新增卡片简介。','',
  '【必须交付】','1. 同时提供日间和夜间完整配色，18 个 --kaku-* 颜色变量一个都不能少。','2. 夜间弹窗必须明显暗于弹窗正文，弹窗正文/背景对比度至少 4.5:1，标题至少 4.5:1；不要只把日间颜色机械反相。','3. 在 KAKU_ADVANCED_START/END 中提供高级 CSS；可设计字体、圆角、边框、阴影、渐变、材质和轻量动画。','4. 动画只能使用 transform、opacity、background-position 等轻量属性，并提供 @media (prefers-reduced-motion: reduce) 的静态回退。','5. 最终答复只输出一份完整 CSS 代码块，不要解释，不要省略变量，不要输出 HTML 或 JavaScript。','',
  '【18 个语义颜色变量及作用】','--kaku-page-bg 页面总背景；--kaku-card-bg 卡片/主面板背景；--kaku-panel-bg 输入框与次级面板；--kaku-modal-bg 弹窗专用背景；','--kaku-body-text 全局正文；--kaku-topbar-text 顶部栏；--kaku-nav-text 分区/筛选导航；--kaku-stats-text 辅助文字、统计与弱提示；','--kaku-card-title 卡片名；--kaku-card-body 首页与完整详情中的卡片简介及阅读正文；--kaku-note-text 首页、快速预览与详情中的备注；--kaku-tag-text 各处主标签；','--kaku-button-text 普通按钮；--kaku-modal-title 弹窗与阅读标题；--kaku-modal-text 弹窗正文；--kaku-setting-title 设置板块标题；--kaku-accent 强调色；--kaku-danger 危险操作。','注意：这些是独立语义色。修改弹窗正文不得改动全局正文、卡片正文、按钮或危险色。','- 详情顶部备注横幅必须保持可读：正文使用弹窗正文色，背景使用弹窗背景色，备注色只用于书签边框或小标签；不得让同一种备注色同时充当前景和背景。','',
  '【可编辑区域与真实选择器】','页面 body；顶部 .topbar；品牌 .logo/.logo-m/.logo-s/.logo-v；搜索 .sbox；分区 .secbar/.stab；筛选 .filterbar-wrap/.fchip；统计 .statsbar；','网格 .grid-layout/.list-layout/.magazine-layout；卡片 .card-item/.cov-wrap/.cinfo/.cname/.cdesc/.cnote/.ctag；文件夹 .folder-cover/.folder-name；','弹窗 .modal-mask/.modal-box/.modal-hd/.modal-title/.modal-body；快速预览 .qp-name/.qp-note/.qp-tag/.qp-sec-hd；阅读 .read-box/.read-body；设置 .settings-page-nav/.settings-page-tab/.set-card；','输入 input/select/textarea/.inp；按钮 button/.actbtn/.hbtn；主加号 #mainFab；展开菜单 .fab-menu button；详情备注横幅 #detailModal .note-banner；AI区 .ai-manage-panel/.ai-assistant-bubble。','',
- '【不可破坏的布局边界】','- 不得改变 .topbar 的核心 flex 结构；“克克卡库”必须完整显示，不能挤压搜索框，不能覆盖 v4.1.4。','- 不得把设置分类栏、板块标题或普通内容设置成 fixed/sticky；不得制造遮挡、横向滚动或不可点击区域。','- 不得隐藏关闭按钮、搜索、导入、备份、恢复、AI诊断等功能；不得使用全局 * 选择器重置布局。','- 手机优先，至少兼容 280px 宽度与 1.5 倍字号；必要时用 @media (max-width:420px)。','- 禁止 @import、url()、外部字体/图片、expression、javascript:、behavior、HTML 标签和脚本。可使用系统字体及 CSS 渐变。','',
+ '【不可破坏的布局边界】','- 不得改变 .topbar 的核心 flex 结构；“克克卡库”必须完整显示，不能挤压搜索框，不能覆盖 v4.1.6。','- 不得把设置分类栏、板块标题或普通内容设置成 fixed/sticky；不得制造遮挡、横向滚动或不可点击区域。','- 不得隐藏关闭按钮、搜索、导入、备份、恢复、AI诊断等功能；不得使用全局 * 选择器重置布局。','- 手机优先，至少兼容 280px 宽度与 1.5 倍字号；必要时用 @media (max-width:420px)。','- 禁止 @import、url()、外部字体/图片、expression、javascript:、behavior、HTML 标签和脚本。可使用系统字体及 CSS 渐变。','',
  '【当前配色底稿；可以重设计颜色，但必须保留相同变量名与两段结构】',palette,'','【标准答卷骨架】','在上面的两段 :root 配色之后继续输出：','/* KAKU_ADVANCED_START */','/* 这里写仅作用于上述真实选择器的高级 CSS */','@media (prefers-reduced-motion: reduce) { /* 关闭自定义无限动画与大幅过渡 */ }','/* KAKU_ADVANCED_END */','','现在先理解全部约束，再根据我随后提供的审美描述完成风格。若我的描述与可用性冲突，以文字可读、按钮可点、数据安全和窄屏不溢出为最高优先级。'
  ].join('\n');
 }
@@ -1840,6 +1854,7 @@ async function streamNativeZip(name,entries){
 function renderTabs(){
  if(!S.sections.includes('笔记'))S.sections.push('笔记');
   const bar=document.getElementById('secbar');
+  const scrollLeft=bar.scrollLeft;
   [...bar.querySelectorAll('.stab,.stab-add')].forEach(e=>e.remove());
   const sp=bar.querySelector('.secbar-sp');
   S.sections.forEach(s=>{
@@ -1852,6 +1867,7 @@ function renderTabs(){
   const add=document.createElement('button');
   add.className='stab-add';add.textContent='+';add.title='新建分区';add.onclick=openSettings;bar.querySelector('[data-new-note]')?.remove();
   bar.insertBefore(add,sp);
+  bar.scrollLeft=scrollLeft;
 }
 
 // ============================================================
@@ -2467,9 +2483,13 @@ ${(()=>{const cls=getCardChatlogs(id);if(!cls.length)return'';return`<div class=
   const navNow=document.getElementById('wbPages-'+id)?.closest('.wb-section')?.querySelector('.wb-version-nav');if(navNow&&priorNavLeft!==undefined)navNow.scrollLeft=priorNavLeft;
   const wbBox=document.getElementById('wbPages-'+id);if(wbBox){const index=wbVersions.findIndex(v=>v.id===card.activeWorldBookVersion);wbBox.scrollLeft=wbBox.clientWidth*Math.max(0,index);requestAnimationFrame(()=>{if(wbBox.isConnected)wbBox.scrollLeft=wbBox.clientWidth*Math.max(0,index)});}
   if(wbBox){let timer;wbBox.addEventListener('scroll',()=>{clearTimeout(timer);timer=setTimeout(async()=>{const index=Math.round(wbBox.scrollLeft/Math.max(1,wbBox.clientWidth)),v=wbVersions[index];if(!v||card.activeWorldBookVersion===v.id)return;card.activeWorldBookVersion=v.id;card.worldBookEntries=v.entries;wbBox.parentElement.querySelectorAll('.wb-version-name').forEach((el,i)=>el.classList.toggle('active',i===index));const full=await dbG('cards',id);if(full){full.activeWorldBookVersion=v.id;full.worldBookEntries=v.entries;await dbP('cards',full)}},120)},{passive:true});}
+  // Finish synchronous detail rendering before exposing the overlay.
+  renderLinkSection(card);
+  await new Promise(resolve=>requestAnimationFrame(resolve));
+  if(seq!==_detailOpenSeq||_detailCurrentId!==String(id))return;
   openModal('detailModal');
   cardBrowseOpened('detail',id);
-  renderLinkSection(card);
+  // 预设条目分批渲染会检查弹窗已带 show；必须在 openModal 之后启动，否则第一批就退出，列表一直是空的。
   startPresetDetailRender(id);
 
 
@@ -3771,7 +3791,23 @@ let total=Math.max(1,Math.round(file.size/3000)); // 先粗估，读到头部 co
   }
   await dbP('meta',{key:'subTagLib',value:S.subTagLib});
 }
-          if(tmp.tagParents){S.tagParents=mergeTagParentsMaps(S.tagParents,tmp.tagParents);await dbP('meta',{key:'tagParents',value:S.tagParents})}
+          const sectionMaps=tmp.tagParentsBySection;
+          if(sectionMaps&&typeof sectionMaps==='object'&&!Array.isArray(sectionMaps)){
+            for(const sec of S.sections){
+              if(!Object.prototype.hasOwnProperty.call(sectionMaps,sec))continue;
+              const incoming=sectionMaps[sec];
+              if(incoming&&typeof incoming==='object'&&!Array.isArray(incoming))S.tagParentsBySection[sec]=mergeTagParentsMaps(tagParentMap(sec),incoming);
+            }
+          }else if(tmp.tagParents){
+            const sections=Array.isArray(tmp.sections)?[...new Set(tmp.sections)].filter(sec=>S.sections.includes(sec)):[];
+            for(const [child,parents] of Object.entries(normalizeTagParentsMap(tmp.tagParents))){
+              const matches=sections.filter(sec=>tmp.subTagLib?.[sec]?.includes(child)&&parents.every(parent=>tmp.mainTagLib?.[sec]?.includes(parent)));
+              const sec=sections.length===1?sections[0]:matches.length===1?matches[0]:null;
+              if(sec)S.tagParentsBySection[sec]=mergeTagParentsMaps(tagParentMap(sec),{[child]:parents});
+            }
+          }
+          S.tagParents=tagParentMap(S.activeSection);
+          await saveTagParentMaps();
         }catch(e){throw new Error('备份头部损坏：'+e.message)}
         const arrIdx=buf.indexOf('[',idx);if(arrIdx<0)throw new Error('备份中缺少 cards 数组');
         buf=buf.slice(arrIdx+1);scanPos=0;
@@ -4526,7 +4562,36 @@ function extractCD(data,card){
 // ============================================================
 // 分区管理
 // ============================================================
-function openSettings(){openModal('settingsModal');requestAnimationFrame(()=>setTimeout(()=>{renderMainTagLib();fillBatchLimits();renderSafetyLibrary();setupSettingsPages();renderAIProfiles();renderAssistantHome();renderFolderLib();renderGroupList();renderSubTagLib();renderTagParentLib();renderSectionList();renderChatlogLib();renderImpSel();renderStyleStudio();const su=document.getElementById('stUrlInput');if(su)su.value=stUrl;loadWebdavConfig();scheduleGridCapacityEstimate()},0))}
+let settingsRefreshSequence=0;
+function openSettings(){
+ const modal=document.getElementById('settingsModal');
+ const body=modal.querySelector('.modal-body');
+ const sequence=++settingsRefreshSequence;
+ const scrollTop=body.scrollTop;
+ setupSettingsPages();
+ if(body.scrollTop!==scrollTop)body.scrollTop=scrollTop;
+ openModal('settingsModal');
+ const refreshSteps=[
+  fillBatchLimits,renderMainTagLib,renderSafetyLibrary,renderAIProfiles,
+  renderAssistantHome,renderFolderLib,renderGroupList,renderSubTagLib,
+  renderTagParentLib,renderSectionList,renderChatlogLib,renderImpSel,renderStyleStudio,
+  ()=>{
+   const input=document.getElementById('stUrlInput');
+   if(input)input.value=stUrl;
+   loadWebdavConfig();
+   scheduleGridCapacityEstimate();
+  }
+ ];
+ let next=0;
+ const refresh=()=>{
+  if(sequence!==settingsRefreshSequence||!modal.classList.contains('show'))return;
+  const currentTop=body.scrollTop;
+  refreshSteps[next++]();
+  if(body.scrollTop!==currentTop)body.scrollTop=currentTop;
+  if(next<refreshSteps.length)requestAnimationFrame(()=>setTimeout(refresh,0));
+ };
+ requestAnimationFrame(()=>setTimeout(refresh,0));
+}
 
 function renderSectionList(){
 const list=document.getElementById('sectionList');if(!list)return;
@@ -5110,7 +5175,7 @@ const KAKU_KNOWLEDGE=[
  {id:'export',title:'导出原始文件和未推送',keys:'导出 原始文件 未推送 下载 卡库 ZIP 分批',text:'路径：设置 → 数据与安全 → 备份与恢复。原始文件可按全部、分区或具体项目导出；大量项目会分批并记录传输任务。用户导出通常保存到内部存储“Download/卡库”。“仅导出未推送”用于筛选尚未推送的项目。'}
 ];
 
-const AI_ASSISTANT_SYSTEM=`你是“克克卡库 v4.1.4”当前版本的专属功能助手与谨慎型故障排查助手。
+const AI_ASSISTANT_SYSTEM=`你是“克克卡库 v4.1.6”当前版本的专属功能助手与谨慎型故障排查助手。
 
 工作规则：
 1. 优先依据每轮提供的【卡库功能知识】回答，使用真实按钮名和路径；不要凭通用软件经验编造卡库不存在的入口。
@@ -5171,7 +5236,7 @@ function assistantUpdateReference(){if(!assistantCurrent)return;const q=document
 
 function assistantKnowledgeScore(entry,q){q=String(q||'').toLowerCase();let score=0;for(const k of (entry.title+' '+entry.keys).toLowerCase().split(/\s+/)){if(k&&q.includes(k))score+=Math.max(2,k.length);else if(k.length>1&&[...k].some(ch=>q.includes(ch)))score+=.35}return score}
 function assistantKnowledgeFor(q){const rows=KAKU_KNOWLEDGE.map(x=>({x,score:assistantKnowledgeScore(x,q)})).sort((a,b)=>b.score-a.score);const hit=rows.filter(v=>v.score>0).slice(0,8).map(v=>v.x);return hit.length?hit:KAKU_KNOWLEDGE.filter(x=>['settings','import','backup-diff','tag-mount'].includes(x.id))}
-function assistantAppConfig(){let safe={};try{safe=safetyInfo()}catch(e){}return{app:'克克卡库',version:'4.1.3',release:'4.1.3 · 增量备份、对白交互与酒馆皮肤预览',activeSection:S.activeSection,sections:[...(S.sections||[])],capabilities:['角色卡、世界书、预设、正则、工具、美化、其他资源自动识别导入','导入预检、损坏文件确认、ZIP分批与多文件夹扫描','版本绑定、Search In记忆、独立世界书与正则导出','笔记区：方形预览、正文预览、备注与链接自动保存、标签、富文本排版、高亮与底部工具栏','快速预览、链接备注、大小标签、分组、版本号','AI标签整理与AI诊断'],cardCount:(S.cards||[]).filter(x=>!x._delAt).length,filePickerPreference:importPickerMode()==='other'?'其他文件管理器':'系统文件',realtimeBackupConfigured:!!safe.ready,unfinishedTransfer:!!(transferSummary&&['running','paused','failed'].includes(transferSummary.status))}}
+function assistantAppConfig(){let safe={};try{safe=safetyInfo()}catch(e){}return{app:'克克卡库',version:'4.1.6',release:'4.1.6 · 云同步只传新增与修改的卡、世界书灯号可保存、网页版预设条目显示修复',activeSection:S.activeSection,sections:[...(S.sections||[])],capabilities:['角色卡、世界书、预设、正则、工具、美化、其他资源自动识别导入','导入预检、损坏文件确认、ZIP分批与多文件夹扫描','版本绑定、Search In记忆、独立世界书与正则导出','笔记区：方形预览、正文预览、备注与链接自动保存、标签、富文本排版、高亮与底部工具栏','快速预览、链接备注、大小标签、分组、版本号','AI标签整理与AI诊断'],cardCount:(S.cards||[]).filter(x=>!x._delAt).length,filePickerPreference:importPickerMode()==='other'?'其他文件管理器':'系统文件',realtimeBackupConfigured:!!safe.ready,unfinishedTransfer:!!(transferSummary&&['running','paused','failed'].includes(transferSummary.status))}}
 async function collectDiagnosisReport(){const report={schema:'kaku-ai-diagnosis-v1',checkedAt:new Date().toISOString()};try{report.native=window.AndroidDiagnosis?.environmentReport?JSON.parse(AndroidDiagnosis.environmentReport()||'{}'):{source:'browser'}}catch(e){report.native={source:'browser',reportError:diagSafeError(e)}}const database={open:!!db,counts:{},hadCardsSentinel:guardHadCards(),nativeGuard:guardStatus(),storageFaultThisSession:!!_dbStorageFault};try{for(const name of ['cards','cardIndex','meta','chatlogs'])database.counts[name]=db.objectStoreNames.contains(name)?await dbCount(name):null}catch(e){database.readError=diagSafeError(e)}report.database=database;try{const imp=await dbG('meta','importStageSummary'),rst=await dbG('meta','restoreStageSummary'),tr=await dbG('meta','transferSummary');report.tasks={import:imp?.value?{status:imp.value.status||'paused',completed:Number(imp.value.completed||0),total:Number(imp.value.total||0)}:null,restore:rst?.value?{status:rst.value.status||'paused'}:null,transfer:tr?.value?{type:tr.value.type||'',status:tr.value.status||'',completed:Number(tr.value.completed||0),total:Number(tr.value.total||0)}:null}}catch(e){report.tasks={readError:diagSafeError(e)}}return report}
 function assessDiagnosis(report){const items=[],n=report?.native||{},d=report?.database||{},c=d.counts||{},st=n.storage||{},pk=n.pickers||{},safe=n.safety||{};if(d.open&&!d.readError)items.push('数据库可只读访问，卡片记录 '+Number(c.cards||0)+' 张');else items.push('数据库只读检查未完成');if(d.hadCardsSentinel&&Number(c.cards||0)===0)items.push('需要谨慎：曾有卡哨兵与当前空库不一致，不要用空库备份覆盖旧备份');if(d.storageFaultThisSession)items.push('本次运行曾触发写入保护停止');if(Number(st.privateFreeMB)>=0)items.push('应用数据分区可用约 '+Number(st.privateFreeMB||0)+' MB');if(pk.systemFile===false&&pk.otherFileManager===true)items.push('系统文件入口不可用，但其他文件管理器可用（常见兼容差异）');if(safe.configured===false)items.push('实时备份未开启（可选状态）');else if(safe.configured&&(!safe.permissionPersisted||!safe.readable))items.push('实时备份目录需要重新确认权限');const ev=Array.isArray(n.recentEvents)?n.recentEvents:[],tv=[...ev].reverse().find(x=>x&&x.module==='tavern_network');if(tv)items.push('最近酒馆网络记录：'+String(tv.message||'').replace(/;/g,'，'));const dbEv=[...ev].reverse().find(x=>x&&x.module==='database'&&/danger|failed|Quota|Abort|Database/.test(String(x.message||'')));if(dbEv)items.push('最近数据库风险记录：'+String(dbEv.message||'').replace(/;/g,'，'));return items}
 const STARTUP_SELF_CHECK_ITEMS=[
@@ -5313,11 +5378,11 @@ function aiStoredProfileId(){try{return localStorage.getItem('aiActiveProfileId'
 function aiRememberProfile(id){try{if(id)localStorage.setItem('aiActiveProfileId',String(id))}catch(e){}}
 function aiLoadStore(){try{aiProfiles=JSON.parse(localStorage.getItem('aiProfiles')||'[]')}catch(e){aiProfiles=[]}if(!aiProfiles.length)aiProfiles=[{id:'ai_'+Date.now(),name:'默认配置',url:'',key:'',model:'',temp:1,useTemp:true,max:1200,scope:'standard',fields:['description','worldbook'],requestMode:'single',combinedLimit:120000,prompt:AI_BASE_PROMPT}];if(!localStorage.getItem('aiTempV2')){aiProfiles.forEach(x=>{if(x.temp===.3)x.temp=1;if(x.useTemp==null)x.useTemp=true});localStorage.setItem('aiTempV2','1');aiSaveStore()}const remembered=aiStoredProfileId();if(!aiProfiles.some(x=>x.id===remembered))aiRememberProfile(aiProfiles[0]?.id||'')}
 function aiSaveStore(){try{localStorage.setItem('aiProfiles',JSON.stringify(aiProfiles));const id=document.getElementById('aiProfileSel')?.value;if(id)aiRememberProfile(id)}catch(e){}}
-function renderAIProfiles(){aiLoadStore();loadPromptStore();const el=document.getElementById('aiProfileSel');if(!el)return;const old=el.value||aiStoredProfileId();el.innerHTML=aiProfiles.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('');const keep=aiProfiles.some(x=>x.id===old)?old:(aiProfiles.some(x=>x.id===aiStoredProfileId())?aiStoredProfileId():aiProfiles[0]?.id||'');el.value=keep;aiRememberProfile(keep);loadAIProfileForm();renderPromptTemplates(aiCurrent()?.promptId)}
+function renderAIProfiles(preferredId){aiLoadStore();loadPromptStore();const el=document.getElementById('aiProfileSel');if(!el)return;const old=preferredId||el.value||aiStoredProfileId();el.innerHTML=aiProfiles.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('');const keep=aiProfiles.some(x=>x.id===old)?old:(aiProfiles.some(x=>x.id===aiStoredProfileId())?aiStoredProfileId():aiProfiles[0]?.id||'');el.value=keep;aiRememberProfile(keep);loadAIProfileForm();renderPromptTemplates(aiCurrent()?.promptId)}
 function aiCurrent(){const id=document.getElementById('aiProfileSel')?.value||aiStoredProfileId();return aiProfiles.find(x=>x.id===id)||aiProfiles[0]}
 function loadAIProfileForm(){const el=document.getElementById('aiProfileSel');if(el&&el.value)aiRememberProfile(el.value);const x=aiCurrent();if(!x)return;aiName.value=x.name||'';aiType.value=x.type||'openai';aiUrl.value=x.url||'';aiKey.value=x.key||'';aiModel.value=x.model||'';aiTemp.value=x.temp??1;aiUseTemp.checked=x.useTemp!==false;toggleAITemp();aiMax.value=x.max||1200;aiRequestMode.value=x.requestMode||'single';aiCombinedLimit.value=x.combinedLimit||120000;aiScope.value=x.scope||'standard';renderAIModelSelect(x.models||[],x.model||'');document.querySelectorAll('#aiCustomFields input').forEach(b=>b.checked=(x.fields||[]).includes(b.value));const wm=document.getElementById('aiWorldbookMode');if(wm)wm.value=x.worldbookMode||((x.fields||[]).includes('worldbook')?'all':'none');toggleAICustom()}
 function toggleAICustom(){const v=aiScope.value,e=document.getElementById('aiCustomFields'),d=document.getElementById('aiScopeDesc');if(e)e.style.display=(v==='custom'?'flex':'none');if(d)d.textContent=v==='saving'?'读取名称与简介，适合快速粗分类，Token消耗最低。':v==='standard'?'读取名称、简介，以及 enabled 不为 false 的启用世界书条目；关闭的世界书不会发送。':v==='full'?'读取简介、性格、场景、对白和全部世界书（包括关闭条目），不主动截断。':'普通字段可单独勾选；世界书可选择不读取、仅启用条目或全部条目。'}
-function newAIProfile(){const next={id:'ai_'+Date.now(),name:'新配置',url:'',key:'',model:'',temp:1,useTemp:true,max:1200,scope:'standard',fields:['description','worldbook'],requestMode:'single',combinedLimit:120000,prompt:AI_BASE_PROMPT};aiProfiles.push(next);aiRememberProfile(next.id);aiSaveStore();renderAIProfiles()}
+function newAIProfile(){const next={id:'ai_'+Date.now(),name:'新配置',url:'',key:'',model:'',temp:1,useTemp:true,max:1200,scope:'standard',fields:['description','worldbook'],requestMode:'single',combinedLimit:120000,prompt:AI_BASE_PROMPT};aiProfiles.push(next);aiSaveStore();renderAIProfiles(next.id)}
 function saveAIProfile(){const x=aiCurrent();if(!x)return;x.name=aiName.value.trim()||'未命名配置';x.type=aiType.value;x.url=aiUrl.value.trim();x.key=aiKey.value.trim();x.model=aiModel.value.trim();x.models=Array.isArray(x.models)?x.models:[];x.temp=Number(aiTemp.value);x.useTemp=aiUseTemp.checked;x.max=Math.max(256,Math.min(131072,Number(aiMax.value)||1200));x.requestMode=aiRequestMode.value||'single';x.combinedLimit=Math.max(1000,Number(aiCombinedLimit.value)||120000);x.scope=aiScope.value;x.promptId=aiPromptSel.value;x.fields=[...document.querySelectorAll('#aiCustomFields input:checked')].map(b=>b.value);x.worldbookMode=document.getElementById('aiWorldbookMode')?.value||'none';aiRememberProfile(x.id);aiSaveStore();renderAIProfiles();showToast('AI 配置已保存')}
 async function deleteAIProfile(){if(aiProfiles.length<=1)return showToast('至少保留一个配置');const x=aiCurrent();if(!await confirmDialog('删除AI服务配置“'+x.name+'”？',{danger:true,okText:'删除配置'}))return;aiProfiles=aiProfiles.filter(y=>y.id!==x.id);aiRememberProfile(aiProfiles[0]?.id||'');aiSaveStore();renderAIProfiles()}
 function aiDecodeB64(s){const u=Uint8Array.from(atob(s||''),c=>c.charCodeAt(0));return new TextDecoder().decode(u)}
@@ -5420,7 +5485,7 @@ function renderSafetyLibraryLegacy(){const el=document.getElementById('safetyLib
 function chooseSafetyLibrary(){if(!window.AndroidFolder?.chooseSafetyFolder)return showToast('当前版本不支持安全目录');AndroidFolder.chooseSafetyFolder()}
 async function disableSafetyLibrary(){if(!safetyInfo().ready)return showToast('实时备份已经关闭');if(!await confirmDialog('关闭实时备份？以后不再自动同步，目录中已有备份会保留。',{okText:'关闭备份'}))return;safetyMirrorQueue=[];safetyMirrorRunning=false;try{window.AndroidFolder?.disableSafetyFolder?.();safetyInfoCache=null}catch(e){}renderSafetyLibrary();showToast('实时备份已关闭，已有文件已保留')}
 function onSafetyFolderChosen(){renderSafetyLibrary();showToast('安全目录已授权；可补齐现有卡片')}
-function safetyMirrorName(card){const ext=tfExtByCard(card),base=(card.name||'card').replace(/[\\/:*?\"<>|]/g,'_').slice(0,80);return 'kaku_'+(card.id||'card')+'__'+base+'.'+ext}
+function safetyMirrorName(card){const ext=tfExtByCard(card),base=(card.name||'card').replace(/[\\/:*?\"<>|]/g,'_').trim().slice(0,80)||'card';return 'kaku_'+base+'__'+(card.id||'card')+'.'+ext}
 async function validateSafetyPng(blob){const bytes=new Uint8Array(await blob.arrayBuffer()),view=new DataView(bytes.buffer);const sig=[137,80,78,71,13,10,26,10];if(bytes.length<33||!sig.every((x,i)=>bytes[i]===x))throw Error('PNG 文件头损坏');let p=8,end=false,idat=false;while(p+12<=bytes.length){const n=view.getUint32(p),type=String.fromCharCode(...bytes.subarray(p+4,p+8));if(n>bytes.length-p-12)throw Error('PNG 数据块不完整');if(type==='IDAT')idat=true;if(type==='IEND'){end=true;break}p+=n+12}if(!end||!idat)throw Error('PNG 缺少完整图像数据');const url=URL.createObjectURL(blob);try{await new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>img.naturalWidth&&img.naturalHeight?resolve():reject(Error('PNG 图像为空'));img.onerror=()=>reject(Error('PNG 封面解码失败，已停止覆盖备份'));img.src=url})}finally{URL.revokeObjectURL(url)}}
 async function safetyWriteBase64(name,b64,overwrite){const F=window.AndroidFolder,state=String(F.beginSafetyWriteMode?F.beginSafetyWriteMode(name,!!overwrite):F.beginSafetyWrite(name));if(state==='exists')return'exists';if(state!=='ok')throw new Error(state.replace(/^error:/,''));const CH=768*1024;for(let i=0;i<b64.length;i+=CH){if(!F.appendSafetyChunk(b64.slice(i,i+CH)))throw new Error('写入实时备份失败');await sleep(0)}if(!F.endSafetyWrite())throw new Error('完成实时备份失败');return'ok'}
 function safetyCardMeta(c){return {version:1,id:c.id,name:c.name,section:c.section,tags:c.tags||[],sourceTags:c.sourceTags||[],subtags:c.subtags||[],groupIds:cardGroupIds(c),groupId:cardGroupIds(c)[0]||null,favorite:!!c.favorite,note:c.note||'',annex:c.annex||'',parentId:c.parentId||null,importedAt:c.importedAt||0,fileType:c.fileType||'',organizeMeta:c.organizeMeta||null,importHash:c.importHash||'',updatedAt:Date.now()}}
@@ -5797,7 +5862,7 @@ function uiPaint(){return new Promise(r=>requestAnimationFrame(()=>requestAnimat
 async function openModalBehindBusy(id){const m=document.getElementById(id);m.classList.add('no-motion','show');void m.offsetHeight;await new Promise(r=>requestAnimationFrame(r));m.classList.remove('no-motion')}
 function openModal(id){const m=document.getElementById(id);if(!m)return;if(id==='detailModal'||id==='settingsModal'){m.classList.add('no-motion');m.classList.add('show');return}m.classList.add('show')}
 function finishModalClose(id,m){m.classList.remove('show','no-motion');if(id==='pickModal')m.classList.remove('assistant-message-menu');if(id==='quickPreviewModal'&&typeof drawState!=='undefined'&&drawState.previewing){drawState.previewing=false;setTimeout(()=>openModal('drawModal'),0)}if(id==='detailModal'&&typeof drawState!=='undefined'&&drawState.detailing){drawState.detailing=false;setTimeout(()=>openModal('drawModal'),0)}}
-function closeModal(id){if(id==='aiModal')return requestCloseAI();const m=document.getElementById(id),browsing=(id==='quickPreviewModal'||id==='detailModal')&&typeof cardBrowseState!=='undefined'&&cardBrowseState.active;if(!browsing)return finishModalClose(id,m);if(m.dataset.browseClosing==='1')return;m.dataset.browseClosing='1';Promise.resolve(closeCardBrowseSession()).catch(e=>console.warn('restore browse position',e)).finally(()=>requestAnimationFrame(()=>{delete m.dataset.browseClosing;finishModalClose(id,m)}))}
+function closeModal(id){if(id==='aiModal')return requestCloseAI();const m=document.getElementById(id),browsing=(id==='quickPreviewModal'||id==='detailModal')&&typeof cardBrowseState!=='undefined'&&cardBrowseState.active;if(!browsing)return finishModalClose(id,m);if(m.dataset.browseClosing==='1')return;m.dataset.browseClosing='1';if(id==='quickPreviewModal')finishModalClose(id,m);Promise.resolve(closeCardBrowseSession()).catch(e=>console.warn('restore browse position',e)).finally(()=>{delete m.dataset.browseClosing;if(id!=='quickPreviewModal')requestAnimationFrame(()=>finishModalClose(id,m))})}
 // 大图灯箱
 let _lbSrc='',_lbName='';
 function openLightbox(src,name=''){_lbSrc=src;_lbName=String(name||'');const m=document.getElementById('lbMask');const img=document.getElementById('lbImg');img.src=src;m.classList.add('show')}
@@ -6058,14 +6123,15 @@ async function writeZipEntryNative(card,name){const DL=window.AndroidDL;if(!DL.b
 function exportExt(card){const t=String(card?.fileType||'').toUpperCase();return t==='PNG'?'png':t==='JSON'?'json':t==='DOCX'?'docx':t==='WEBP'?'webp':t==='JPG'||t==='JPEG'?'jpg':'txt'}
 function safeExportName(card,ext){const raw=String(card?.name||'card').replace(/[\/\\:*?"<>|\u0000-\u001f]/g,'_').trim()||'card';return raw+'.'+(ext||exportExt(card))}
 function transferRemaining(t){const done=new Set(t.completed||[]);return t.ids.filter(id=>!done.has(id))}
-function subsetBackupMeta(ids){const set=new Set(ids),cards=S.cards.filter(c=>set.has(c.id)),secs=[...new Set(cards.map(c=>c.section).filter(Boolean))],groups=S.groups.filter(g=>cards.some(c=>cardHasGroup(c,g.id))),main={},sub={};for(const sec of secs){main[sec]=S.mainTagLib[sec]||[];sub[sec]=S.subTagLib[sec]||[]}return {sections:secs,groups,mainTagLib:main,subTagLib:sub,tagParents:S.tagParents}}
+function subsetBackupMeta(ids){const set=new Set(ids),cards=S.cards.filter(c=>set.has(c.id)),secs=[...new Set(cards.map(c=>c.section).filter(Boolean))],groups=S.groups.filter(g=>cards.some(c=>cardHasGroup(c,g.id))),main={},sub={};for(const sec of secs){main[sec]=S.mainTagLib[sec]||[];sub[sec]=S.subTagLib[sec]||[]}const tagParentsBySection=Object.fromEntries(secs.map(sec=>[sec,normalizeTagParentsMap(tagParentMap(sec))]));
+ return {sections:secs,groups,mainTagLib:main,subTagLib:sub,tagParentsBySection}}
 async function nativeWriteText(DL,text){const bytes=new TextEncoder().encode(text),CH=192*1024;for(let i=0;i<bytes.length;i+=CH){const a=bytes.subarray(i,Math.min(bytes.length,i+CH));let bin='';for(let j=0;j<a.length;j++)bin+=String.fromCharCode(a[j]);if(!DL.appendChunk(btoa(bin)))return false;await sleep(0)}return true}
-async function runBackupTask(t){const remain=transferRemaining(t),segment=remain.slice(0,TRANSFER_SEGMENT);if(!segment.length)return;const part=(t.part||0)+1,name=`${t.baseName||'卡库备份'}_第${part}部分_${segment.length}项.json`,DL=window.AndroidDL,meta=subsetBackupMeta(segment);if(!DL?.beginFile||!DL.beginFile(name))throw new Error('无法创建备份文件');const head=JSON.stringify({version:3,exportedAt:Date.now(),count:segment.length,partial:t.ids.length!==segment.length,sections:meta.sections,groups:meta.groups,mainTagLib:meta.mainTagLib,subTagLib:meta.subTagLib,tagParents:meta.tagParents}).replace(/}$/,',"cards":[');if(!await nativeWriteText(DL,head)){try{DL.abortFile&&DL.abortFile()}catch(e){}throw new Error('写入备份头失败')}let written=0;for(let i=0;i<segment.length;i++){const c=await dbG('cards',segment[i]);if(!c){t.failed.push({id:segment[i],reason:'记录不存在'});continue}if(!await nativeWriteText(DL,(written?',':'')+JSON.stringify(c))){try{DL.abortFile&&DL.abortFile()}catch(e){}throw new Error('写入备份卡片失败')}written++;busyUpdate((t.completed||[]).length+i+1,t.ids.length,c.name||'');await sleep(0)}if(!await nativeWriteText(DL,']}')||!DL.endFile())throw new Error('备份封口失败');t.completed.push(...segment);t.part=part;await saveTransferTask(t)}
+async function runBackupTask(t){const remain=transferRemaining(t),segment=remain.slice(0,TRANSFER_SEGMENT);if(!segment.length)return;const part=(t.part||0)+1,name=`${t.baseName||'卡库备份'}_第${part}部分_${segment.length}项.json`,DL=window.AndroidDL,meta=subsetBackupMeta(segment);if(!DL?.beginFile||!DL.beginFile(name))throw new Error('无法创建备份文件');const head=JSON.stringify({version:3,exportedAt:Date.now(),count:segment.length,partial:t.ids.length!==segment.length,sections:meta.sections,groups:meta.groups,mainTagLib:meta.mainTagLib,subTagLib:meta.subTagLib,tagParentsBySection:meta.tagParentsBySection}).replace(/}$/,',"cards":[');if(!await nativeWriteText(DL,head)){try{DL.abortFile&&DL.abortFile()}catch(e){}throw new Error('写入备份头失败')}let written=0;for(let i=0;i<segment.length;i++){const c=await dbG('cards',segment[i]);if(!c){t.failed.push({id:segment[i],reason:'记录不存在'});continue}if(!await nativeWriteText(DL,(written?',':'')+JSON.stringify(c))){try{DL.abortFile&&DL.abortFile()}catch(e){}throw new Error('写入备份卡片失败')}written++;busyUpdate((t.completed||[]).length+i+1,t.ids.length,c.name||'');await sleep(0)}if(!await nativeWriteText(DL,']}')||!DL.endFile())throw new Error('备份封口失败');t.completed.push(...segment);t.part=part;await saveTransferTask(t)}
 async function runOriginalTask(t){const remain=transferRemaining(t);for(let i=0;i<remain.length;i++){const c=await dbG('cards',remain[i]);if(!c?.rawData){t.failed.push({id:remain[i],reason:'缺少原始文件'});t.completed.push(remain[i]);await saveTransferTask(t);continue}busyUpdate(t.completed.length+1,t.ids.length,c.name||'');Object.assign(c,await prepareOriginalForOutput(c));await writeRawNative(c,(t.prefixSection?'['+(c.section||'')+'] ':'')+safeExportName(c,exportExt(c)));t.completed.push(c.id);await saveTransferTask(t);await sleep(30)}}
 async function runZipTask(t){const remain=transferRemaining(t),segment=remain.slice(0,TRANSFER_SEGMENT);if(!segment.length)return;const DL=window.AndroidDL,part=(t.part||0)+1,name=`${t.baseName||'卡库原始文件'}_第${part}部分_${segment.length}项.zip`;if(!DL?.beginZip||!DL.beginZip(name))throw new Error('无法创建 ZIP');try{const names=new Set();for(let i=0;i<segment.length;i++){const c=await dbG('cards',segment[i]);if(!c?.rawData)continue;Object.assign(c,await prepareOriginalForOutput(c));let nm=safeExportName(c,exportExt(c)),base=nm,k=1;while(names.has(nm))nm=base.replace(/(\.[^.]+)$/,'_'+k+++'$1');names.add(nm);busyUpdate(t.completed.length+i+1,t.ids.length,c.name||'');await writeZipEntryNative(c,nm);await sleep(0)}if(!DL.finishZip())throw new Error('ZIP 封口失败')}catch(e){try{DL.abortZip()}catch(x){}throw e}t.completed.push(...segment);t.part=part;await saveTransferTask(t)}
 async function executeBrowserTransferTask(t){
  const ids=transferRemaining(t);if(t.type==='zip')throw new Error('电脑浏览器ZIP打包暂未开放；可使用“原始文件”逐项导出');
- if(t.type==='backup'){const meta=subsetBackupMeta(ids),cards=[];for(let i=0;i<ids.length;i++){const c=await dbG('cards',ids[i]);if(c)cards.push(c);busyUpdate(i+1,ids.length,c?.name||'');await sleep(0)}dlB(new Blob([JSON.stringify({version:3,exportedAt:Date.now(),count:cards.length,sections:meta.sections,groups:meta.groups,mainTagLib:meta.mainTagLib,subTagLib:meta.subTagLib,tagParents:meta.tagParents,cards})],{type:'application/json'}),(t.baseName||'卡库备份')+'.json');t.completed.push(...ids);return}
+ if(t.type==='backup'){const meta=subsetBackupMeta(ids),cards=[];for(let i=0;i<ids.length;i++){const c=await dbG('cards',ids[i]);if(c)cards.push(c);busyUpdate(i+1,ids.length,c?.name||'');await sleep(0)}dlB(new Blob([JSON.stringify({version:3,exportedAt:Date.now(),count:cards.length,sections:meta.sections,groups:meta.groups,mainTagLib:meta.mainTagLib,subTagLib:meta.subTagLib,tagParentsBySection:meta.tagParentsBySection,cards})],{type:'application/json'}),(t.baseName||'卡库备份')+'.json');t.completed.push(...ids);return}
  if(t.type==='originals'){for(let i=0;i<ids.length;i++){const c=await dbG('cards',ids[i]);if(c?.rawData){Object.assign(c,await prepareOriginalForOutput(c));dlB(du2b(c.rawData),(t.prefixSection?'['+(c.section||'')+'] ':'')+safeExportName(c,exportExt(c)))}else t.failed.push({id:ids[i],reason:'缺少原始文件'});t.completed.push(ids[i]);busyUpdate(i+1,ids.length,c?.name||'');await sleep(120)}return}
  throw new Error('未知任务类型')}
 async function executeTransferTask(t){if(transferRunning)return;transferRunning=true;t.status='running';await saveTransferTask(t);closeModal('transferModal');busyShow(t.title,'准备中…');try{if(!window.AndroidDL?.beginFile){await executeBrowserTransferTask(t)}while(transferRemaining(t).length){if(t.type==='backup')await runBackupTask(t);else if(t.type==='originals')await runOriginalTask(t);else if(t.type==='zip')await runZipTask(t);else throw new Error('未知任务类型')}t.status='completed';if(t.cursorUpdate){safetyOriginalCursors[t.cursorUpdate.section]=t.cursorUpdate.next>=t.cursorUpdate.total?0:t.cursorUpdate.next;saveSafetyOriginalCursors()}await saveTransferTask(t);busyHide();transferRunning=false;await dbD('meta',transferTaskKey(t.id));await dbD('meta','transferSummary');transferSummary=null;updateTransferChip();exitSelectMode();renderGrid();showToast('导出完成：'+t.ids.length+' 项'+((t.part||0)>1?'，'+t.part+' 个部分':''))}catch(e){t.status='failed';t.error=e.message||String(e);await saveTransferTask(t);busyHide();transferRunning=false;showToast('任务已暂停：'+t.error);openTransferCenter()}}
@@ -6218,7 +6284,7 @@ function renderManualRoot(){const b=document.getElementById('manualBody');if(!b)
 function renderManualFAQ(){const b=document.getElementById('manualBody');if(!b)return;b.innerHTML='<button class="actbtn manual-back" onclick="renderManualRoot()">← 返回说明书首页</button><div class="manual-faq-list">'+MANUAL_FAQ.map((x,i)=>`<button class="manual-faq-q" onclick="showManualFAQ(${i})">${x.q}<span>›</span></button>`).join('')+'</div>'}
 function showManualFAQ(i){const b=document.getElementById('manualBody'),x=MANUAL_FAQ[i];if(!b||!x)return;b.innerHTML=`<button class="actbtn manual-back" onclick="renderManualFAQ()">← 返回常见问题</button><div class="manual-detail"><h3>${x.q}</h3><p>${x.a}</p></div>`}
 function renderManualHome(){const b=document.getElementById('manualBody');if(!b)return;b.innerHTML='<button class="actbtn manual-back" onclick="renderManualRoot()">← 返回说明书首页</button><div class="manual-cats">'+MANUAL_SECTIONS.map(x=>`<button class="manual-cat" onclick="renderManualSection('${x.id}')"><b>${x.icon} ${x.title}</b><small>${x.desc}</small></button>`).join('')+'</div>'}
-function openManualSettingsPath(page,needle){openSettings();switchSettingsPage(page);const box=document.querySelector('#settingsModal .modal-box'),nav=document.getElementById('settingsPageNav'),cards=[...document.querySelectorAll('#settingsModal .set-card')];let target=null;for(const c of cards){const h=c.querySelector('h4');if((h?h.textContent:'').toLowerCase().includes(String(needle||'').toLowerCase())){target=c;break}}if(!box||!target)return;const br=box.getBoundingClientRect(),tr=target.getBoundingClientRect(),header=box.querySelector('.modal-hd'),reserved=(header?header.offsetHeight:0)+(nav?nav.offsetHeight:0)+12;const top=Math.max(0,box.scrollTop+(tr.top-br.top)-reserved);box.scrollTo({top,behavior:'smooth'});setTimeout(()=>{target.classList.add('settings-jump-focus');setTimeout(()=>target.classList.remove('settings-jump-focus'),2200)},450)}
+function openManualSettingsPath(page,needle){openSettings();switchSettingsPage(page);const key=String(needle||'').toLowerCase();const target=[...document.querySelectorAll('#settingsModal .set-card')].find(c=>c.dataset.settingsPage===page&&(c.querySelector('h4')?.textContent||'').toLowerCase().includes(key));jumpToSettingsCard(target)}
 function decorateManualPaths(root){root.querySelectorAll('.manual-path').forEach(el=>{const text=el.textContent.trim();let page='',needle='';if(/设置\s*→\s*Backup & Restore/i.test(text)){page='safety';needle='Backup & Restore'}else if(/设置\s*→\s*Data & Safety/i.test(text)){page='safety';needle='Data & Safety'}else if(/设置\s*→\s*Chat Logs/i.test(text)){page='smart';needle='Chat Logs'}else if(/设置\s*→\s*AI Organizer/i.test(text)){page='smart';needle='AI Organizer'}else if(/设置\s*→\s*Local Tavern/i.test(text)){page='smart';needle='Local Tavern'}else if(/设置\s*→\s*Sections/i.test(text)){page='organize';needle='Sections'}if(page){const b=document.createElement('button');b.className='manual-path manual-path-btn';b.textContent=text+' · 打开位置';b.onclick=()=>openManualSettingsPath(page,needle);el.replaceWith(b)}})}
 function renderManualSection(id){const b=document.getElementById('manualBody');if(!b)return;if(id==='all'){b.innerHTML='<button class="actbtn manual-back" onclick="renderManualHome()">← 返回分类</button>'+MANUAL_SECTIONS.filter(x=>x.id!=='all').map(x=>`<details open><summary><b>${x.icon} ${x.title}</b></summary><div class="manual-detail">${MANUAL_CONTENT[x.id].html}</div></details>`).join('');decorateManualPaths(b);return}const x=MANUAL_CONTENT[id];if(!x)return; b.innerHTML=`<button class="actbtn manual-back" onclick="renderManualHome()">← 返回分类</button><div class="manual-detail"><h3>${x.title}</h3>${x.html}</div>`;decorateManualPaths(b)}
 function fabAI(){toggleFabMenu(false);const ids=S.selectMode?[...S.selectedIds]:[];if(S.selectMode&&!ids.length)return showToast('请先选择卡片，或退出选择模式后打开完整列表');if(S.selectMode){exitSelectMode();renderGrid()}openAIOrganizer(ids.length?ids:undefined)}
@@ -6692,6 +6758,8 @@ setTimeout(fillStAuth,0);
   box-sizing: border-box !important;
 }
 #quickPreviewModal .modal-box {
+  will-change: transform;
+  transform: translateZ(0) scale(.93) translateY(12px) !important;
   width: 100% !important;
   max-width: 460px !important;
   border-top: none !important;
@@ -6701,7 +6769,16 @@ setTimeout(fillStAuth,0);
   box-shadow: 0 28px 72px rgba(44,36,22,.32) !important;
   transform: scale(.93) translateY(12px) !important;
   overflow: hidden !important;
-  max-height: calc(100vh - 80px) !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: calc(100dvh - 80px) !important;
+}
+#quickPreviewModal .modal-body {
+  overscroll-behavior: contain;
+  transform: translateZ(0);
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: calc(100dvh - 150px) !important;
 }
 #quickPreviewModal.show .modal-box {
   transform: scale(1) translateY(0) !important;
@@ -7625,7 +7702,7 @@ setTimeout(fillStAuth,0);
 [data-style]:not([data-style="dream"]) .actbtn:active,[data-style]:not([data-style="dream"]) .fchip:active,[data-style]:not([data-style="dream"]) .lbtn:active,[data-style]:not([data-style="dream"]) .fab-menu button:active{transform:translateY(1px);opacity:.82}
 @media (prefers-reduced-motion:reduce){[data-style] .actbtn,[data-style] .fchip,[data-style] .lbtn,[data-style] #mainFab,[data-style] .fab-menu button{transition:none!important;transform:none!important}}
 
-/* 克克卡库 v4.1.4：所有主题都必须完整显示中文标题，主题只能改变气质，不能把字裁掉 */
+/* 克克卡库 v4.1.6：所有主题都必须完整显示中文标题，主题只能改变气质，不能把字裁掉 */
 .topbar .sbox{flex:1 1 auto!important;min-width:54px!important}
 .topbar>.logo{flex:0 0 clamp(78px,23vw,90px)!important;width:clamp(78px,23vw,90px)!important;min-width:clamp(78px,23vw,90px)!important;max-width:90px!important;overflow:hidden!important;margin-left:0!important;margin-right:0!important}
 .topbar>.logo .logo-line{display:block!important;width:100%!important;max-width:100%!important;overflow:visible!important;padding:0!important}
