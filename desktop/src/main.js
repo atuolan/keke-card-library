@@ -50,7 +50,7 @@ function initContext() {
   };
   for (const d of [ctx.paths.files, ctx.paths.cache]) fs.mkdirSync(d, { recursive: true });
   ctx.prefs = new Prefs(ctx.paths.prefs);
-  ctx.version = readVersion();
+  ctx.version = readVersion(app.isPackaged);
   // 与 Java 一样使用内存 cookie：重启后需要重新登录酒馆
   ctx.sessions.st = session.fromPartition('kaku-st-http');
   ctx.sessions.ai = session.fromPartition('kaku-ai-http');

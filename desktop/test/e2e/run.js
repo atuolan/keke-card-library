@@ -11,6 +11,7 @@ const { cardPng, readChara } = require('./fixtures');
 const { buildZip } = require('../unit/helpers');
 const { startSillyTavern, startOpenAI, startWebDav } = require('./mock-servers');
 const { walkEntries } = require('../../src/zip');
+const { parseGradle } = require('../../src/version');
 
 const DESKTOP = path.resolve(__dirname, '..', '..');
 const OUT = path.join(DESKTOP, 'test-output');
@@ -149,7 +150,7 @@ async function main() {
     assert.ok(r.startup, '启动检查点已记录');
     assert.strictEqual(r.ev.message, '[local-path] Bearer [secret] [secret] [network-endpoint] [email]');
     assert.ok(r.rep.free > 0); assert.strictEqual(r.rep.pickers.systemFile, true); assert.strictEqual(r.rep.safety.configured, false);
-    assert.strictEqual(r.rep.appVersion, '4.1.4');
+    assert.strictEqual(r.rep.appVersion, parseGradle(fs.readFileSync(path.join(DESKTOP, '..', 'app', 'build.gradle.kts'), 'utf8')).name, '版本号与 Android 一致');
     assert.deepStrictEqual(await app.evaluate(() => global.__kakuOpened), ['https://example.com/a?b=1']);
     await waitToast(/无法打开链接/);
   });
