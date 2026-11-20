@@ -1,0 +1,4 @@
+/* 浏览器版外壳样式。
+   弹窗大小与滚动由页面本身处理（4.1.6 起页面用 100dvh 与弹窗内部滚动），外壳不再覆盖。
+   浏览器里用不了的设置板块：切换设置分页时页面会改写 style.display，这里用 !important 保证一直隐藏。 */
+[data-kaku-web-hidden] { display:none!important; }

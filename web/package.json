@@ -1,0 +1,15 @@
+{
+  "name": "kaku-web",
+  "version": "0.0.0",
+  "private": true,
+  "description": "克克卡库浏览器版单一 HTML 文件",
+  "author": "kitten112233",
+  "license": "SEE LICENSE IN ../LICENSE.md",
+  "scripts": {
+    "build": "node build.js",
+    "test": "node test/run.js"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0"
+  }
+}
