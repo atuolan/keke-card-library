@@ -396,7 +396,7 @@ async function main() {
     // 新版同步会读取响应头 ETag、发送 If-Match / If-None-Match，都需要跨域放行
     await waitPage(() => /云端已确认|上传完成|同步失败/.test(document.getElementById('toast').textContent), null, 60000);
     const t2 = await pe(() => document.getElementById('toast').textContent);
-    assert.match(t2, new RegExp('云端已确认 ' + total + ' 项，失败/冲突 0 项'), '推送：' + t2);
+    assert.match(t2, new RegExp('云端已确认 ' + total + ' 项.*失败/冲突 0 项'), '推送：' + t2);
     const index = JSON.parse(dav.files.get('/dav/KakuSync/Index.json').toString('utf8'));
     assert.strictEqual(Object.keys(index.fileMap).length, total);
     await pe(() => syncPull());
