@@ -25,12 +25,15 @@ function parseGradle(text) {
 }
 
 function sourceLine() {
-  const { GITHUB_SERVER_URL, GITHUB_REPOSITORY, GITHUB_SHA } = process.env;
-  if (GITHUB_REPOSITORY && GITHUB_SHA) return `本文件对应源码：${GITHUB_SERVER_URL || 'https://github.com'}/${GITHUB_REPOSITORY}/tree/${GITHUB_SHA}`;
+  // 以实际检出的提交为准：定时任务可能从 main 触发、却检出别的分支来建置，此时 GITHUB_SHA 不是建置用的提交
+  let sha = '';
   try {
-    const sha = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
-    if (sha) return '本文件由本地源码建置，git 提交：' + sha;
-  } catch (e) { /* 不是 git 仓库时不写 */ }
+    sha = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+  } catch (e) { /* 不是 git 仓库 */ }
+  const { GITHUB_SERVER_URL, GITHUB_REPOSITORY, GITHUB_SHA } = process.env;
+  sha = sha || GITHUB_SHA || '';
+  if (GITHUB_REPOSITORY && sha) return `本文件对应源码：${GITHUB_SERVER_URL || 'https://github.com'}/${GITHUB_REPOSITORY}/tree/${sha}`;
+  if (sha) return '本文件由本地源码建置，git 提交：' + sha;
   return '';
 }
 
