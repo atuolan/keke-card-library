@@ -1,0 +1,86 @@
+# 建置浏览器版单一 HTML 文件，并用 Chromium 以 file:// 打开测试。
+# HTML 作为本次运行的 Artifact 上传（Actions 页面 → 对应运行 → Artifacts），
+# 不会发布 Release，不改 update.json，也不改 docs/（GitHub Pages 预览版）。
+name: 浏览器版 HTML 建置
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['main', 'claude/**']
+    paths:
+      - 'web/**'
+      - 'app/src/main/assets/index.html'
+      - 'app/build.gradle.kts'
+      - 'LICENSE.md'
+      - 'THIRD_PARTY_NOTICES.md'
+      - '.github/workflows/web-html.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: web-html-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: 建置 HTML
+        id: build
+        run: |
+          node build.js
+          version=$(node -e "const fs=require('fs');console.log(require('./build').parseGradle(fs.readFileSync('../app/build.gradle.kts','utf8')).name)")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: 上传 HTML
+        uses: actions/upload-artifact@v7
+        with:
+          name: kaku-web-${{ steps.build.outputs.version }}-html
+          path: |
+            web/dist/kaku-web-*.html
+            web/dist/kaku-web-*.html.sha256
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: 写入运行摘要
+        run: |
+          {
+            echo "## 克克卡库浏览器版 ${{ steps.build.outputs.version }}"
+            echo
+            echo "在本页底部 **Artifacts** 下载 \`kaku-web-${{ steps.build.outputs.version }}-html\`（zip 内含 HTML 和 SHA-256）。解压后用 Chrome 或 Edge 打开 HTML 即可。"
+            echo
+            echo '```'
+            cat dist/kaku-web-*.html.sha256
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 安装测试依赖
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: 浏览器测试
+        run: npm test
+
+      - name: 上传测试截图与结果
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: web-test-output
+          path: web/test-output/
+          if-no-files-found: ignore
+          retention-days: 14
