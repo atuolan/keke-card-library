@@ -1,7 +1,8 @@
 # 每小时跟进原作者（kitten112233/keke-card-library）：
 #   1. 把本 fork 的 main 同步到原作者最新版（等同网页上的 Sync fork）；
 #   2. 桌面版还没被原作者合并时，把原作者最新版合并进桌面版分支；原作者合并后自动改用 main；
-#   3. 有新内容时在 Windows 上建置 exe 并跑测试，exe 在本次运行页面底部的 Artifacts 下载。
+#   3. 有新内容时在 Windows 上建置 exe、在 Linux 上建置浏览器版 HTML，并分别跑测试；
+#      exe 和 HTML 都在本次运行页面底部的 Artifacts 下载。
 # 手动运行（Actions → 每小时跟进原作者 → Run workflow）时，即使没有新内容也会重新建置。
 # 合并冲突或测试失败时运行会标为失败，GitHub 会发邮件通知；不会发布 Release，也不会改 update.json。
 name: 每小时跟进原作者
@@ -12,7 +13,7 @@ on:
   workflow_dispatch:
     inputs:
       build:
-        description: '没有新内容时也重新建置 exe'
+        description: '没有新内容时也重新建置 exe 和 HTML'
         type: boolean
         default: true
 
@@ -161,5 +162,90 @@ jobs:
         with:
           name: desktop-test-output
           path: desktop/test-output/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  build-web:
+    needs: sync
+    if: needs.sync.outputs.changed == 'true' || (github.event_name == 'workflow_dispatch' && inputs.build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.sync.outputs.ref }}
+
+      - name: 检查是否有浏览器版
+        id: check
+        working-directory: .
+        run: |
+          if [ -f web/build.js ]; then
+            echo "has=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::${{ needs.sync.outputs.ref }} 上没有 web/，跳过 HTML 建置"
+            echo "has=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-node@v7
+        if: steps.check.outputs.has == 'true'
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: 建置 HTML
+        if: steps.check.outputs.has == 'true'
+        id: build
+        run: |
+          node build.js
+          version=$(node -e "const fs=require('fs');console.log(require('./build').parseGradle(fs.readFileSync('../app/build.gradle.kts','utf8')).name)")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: 上传 HTML
+        if: steps.check.outputs.has == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: kaku-web-${{ steps.build.outputs.version }}-html
+          path: |
+            web/dist/kaku-web-*.html
+            web/dist/kaku-web-*.html.sha256
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: 写入运行摘要
+        if: steps.check.outputs.has == 'true'
+        run: |
+          {
+            echo "## 克克卡库浏览器版 ${{ steps.build.outputs.version }}（跟进原作者最新版）"
+            echo
+            echo "建置来源：\`${{ needs.sync.outputs.ref }}\` @ \`$(git rev-parse --short HEAD)\`"
+            echo
+            echo "在本页底部 **Artifacts** 下载 \`kaku-web-${{ steps.build.outputs.version }}-html\`（zip 内含 HTML 和 SHA-256）。解压后用 Chrome 或 Edge 打开 HTML 即可。"
+            echo
+            echo '```'
+            cat dist/kaku-web-*.html.sha256
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 安装测试依赖
+        if: steps.check.outputs.has == 'true'
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: 浏览器测试
+        if: steps.check.outputs.has == 'true'
+        run: npm test
+
+      - name: 上传测试截图与结果
+        if: always() && steps.check.outputs.has == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: web-test-output
+          path: web/test-output/
           if-no-files-found: ignore
           retention-days: 14
