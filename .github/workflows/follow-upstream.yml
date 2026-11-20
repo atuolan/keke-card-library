@@ -1,0 +1,165 @@
+# 每小时跟进原作者（kitten112233/keke-card-library）：
+#   1. 把本 fork 的 main 同步到原作者最新版（等同网页上的 Sync fork）；
+#   2. 桌面版还没被原作者合并时，把原作者最新版合并进桌面版分支；原作者合并后自动改用 main；
+#   3. 有新内容时在 Windows 上建置 exe 并跑测试，exe 在本次运行页面底部的 Artifacts 下载。
+# 手动运行（Actions → 每小时跟进原作者 → Run workflow）时，即使没有新内容也会重新建置。
+# 合并冲突或测试失败时运行会标为失败，GitHub 会发邮件通知；不会发布 Release，也不会改 update.json。
+name: 每小时跟进原作者
+
+on:
+  schedule:
+    - cron: '23 * * * *'
+  workflow_dispatch:
+    inputs:
+      build:
+        description: '没有新内容时也重新建置 exe'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: follow-upstream
+  cancel-in-progress: false
+
+env:
+  UPSTREAM: kitten112233/keke-card-library
+  DESKTOP_BRANCH: claude/practical-cori-9gt7pu
+
+jobs:
+  sync:
+    # 只在这个 fork 里运行；万一被合并到别的仓库也不会动作
+    if: github.repository == 'atuolan/keke-card-library'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      ref: ${{ steps.merge.outputs.ref }}
+      changed: ${{ steps.merge.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: 同步本 fork 的 main
+        id: main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if r=$(gh api -X POST "repos/${GITHUB_REPOSITORY}/merge-upstream" -f branch=main 2>&1); then
+            echo "$r"
+            echo "type=$(echo "$r" | jq -r '.merge_type // "none"')" >> "$GITHUB_OUTPUT"
+          else
+            echo "$r"
+            echo "::warning::main 自动同步失败（可能有冲突，或原作者改了 workflow 文件），请到仓库首页手动点 Sync fork"
+            echo "type=failed" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 合并原作者最新版到桌面版分支
+        id: merge
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch --no-tags "https://github.com/${UPSTREAM}" main
+          up=$(git rev-parse FETCH_HEAD)
+          echo "原作者 main：$up"
+          if git cat-file -e "$up:desktop/package.json" 2>/dev/null; then
+            echo "原作者已经合并桌面版，改为建置 main"
+            echo "ref=main" >> "$GITHUB_OUTPUT"
+            case "${{ steps.main.outputs.type }}" in
+              merge|fast-forward) echo "changed=true" >> "$GITHUB_OUTPUT" ;;
+              *) echo "changed=false" >> "$GITHUB_OUTPUT" ;;
+            esac
+            exit 0
+          fi
+          echo "ref=${DESKTOP_BRANCH}" >> "$GITHUB_OUTPUT"
+          git fetch --no-tags origin "${DESKTOP_BRANCH}"
+          git checkout -B desktop "origin/${DESKTOP_BRANCH}"
+          if git merge-base --is-ancestor "$up" HEAD; then
+            echo "桌面版分支已包含原作者最新版"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if ! git merge --no-edit -m "Merge upstream ${UPSTREAM} main" "$up"; then
+            git merge --abort || true
+            echo "::error::原作者最新版与桌面版分支有冲突，需要手动处理"
+            exit 1
+          fi
+          git push origin "HEAD:${DESKTOP_BRANCH}"
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: sync
+    if: needs.sync.outputs.changed == 'true' || (github.event_name == 'workflow_dispatch' && inputs.build)
+    runs-on: windows-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
+        working-directory: desktop
+    env:
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.sync.outputs.ref }}
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+
+      - name: 安装依赖
+        run: |
+          npm ci
+          node node_modules/electron/install.js
+
+      - name: 建置 exe
+        id: build
+        run: |
+          npm run build:win
+          version=$(node -p "require('./src/build-info.json').versionName")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: 上传 exe
+        uses: actions/upload-artifact@v7
+        with:
+          name: kaku-desktop-${{ steps.build.outputs.version }}-windows-x64
+          path: |
+            desktop/dist/kaku-desktop-*.exe
+            desktop/dist/kaku-desktop-*.exe.sha256
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: 写入运行摘要
+        run: |
+          {
+            echo "## 克克卡库桌面版 ${{ steps.build.outputs.version }}（跟进原作者最新版）"
+            echo
+            echo "建置来源：\`${{ needs.sync.outputs.ref }}\` @ \`$(git rev-parse --short HEAD)\`"
+            echo
+            echo "在本页底部 **Artifacts** 下载 \`kaku-desktop-${{ steps.build.outputs.version }}-windows-x64\`（zip 内含 exe 和 SHA-256）。"
+            echo
+            echo '```'
+            cat dist/kaku-desktop-*.exe.sha256
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 单元测试
+        run: npm test
+
+      - name: 端到端测试（开发模式）
+        run: npm run test:e2e
+
+      - name: 端到端测试（打包后的程序）
+        run: KAKU_E2E_EXECUTABLE="$PWD/dist/win-unpacked/KaKu.exe" npm run test:e2e
+
+      - name: 上传测试截图与结果
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: desktop-test-output
+          path: desktop/test-output/
+          if-no-files-found: ignore
+          retention-days: 14
