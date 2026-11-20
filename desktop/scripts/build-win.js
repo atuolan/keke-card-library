@@ -48,11 +48,11 @@ async function main() {
   };
   if (process.argv.includes('--linux-dir')) {
     // 仅供在 Linux 上验证“打包后”的行为（asar、resources/assets、版本号），不是发布产物
-    const out = await builder.build({ targets: builder.Platform.LINUX.createTarget('dir', builder.Arch.x64), config: { ...config, directories: { output: 'dist-linux', buildResources: 'build' } }, projectDir: DESKTOP });
+    const out = await builder.build({ targets: builder.Platform.LINUX.createTarget('dir', builder.Arch.x64), config: { ...config, directories: { output: 'dist-linux', buildResources: 'build' } }, projectDir: DESKTOP, publish: 'never' });
     console.log('Linux 解包目录：', out);
     return;
   }
-  const out = await builder.build({ targets: builder.Platform.WINDOWS.createTarget('portable', builder.Arch.x64), config, projectDir: DESKTOP });
+  const out = await builder.build({ targets: builder.Platform.WINDOWS.createTarget('portable', builder.Arch.x64), config, projectDir: DESKTOP, publish: 'never' });
   const exe = out.find((f) => /kaku-desktop-.*\.exe$/.test(f));
   if (!exe) throw new Error('没有找到输出的 exe：' + out.join(', '));
   const sha = crypto.createHash('sha256').update(fs.readFileSync(exe)).digest('hex');
