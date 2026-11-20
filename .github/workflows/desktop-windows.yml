@@ -1,0 +1,93 @@
+# 在 GitHub 的 Windows 机器上建置桌面版免安装 exe，并在 Windows 上跑单元测试和端到端测试。
+# exe 作为本次运行的 Artifact 上传（Actions 页面 → 对应运行 → Artifacts），不会发布 Release，也不会改动 update.json。
+name: 桌面版 Windows 建置
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['main', 'claude/**']
+    paths:
+      - 'desktop/**'
+      - 'app/src/main/assets/**'
+      - 'app/src/main/res/mipmap-xxxhdpi/ic_launcher.png'
+      - 'app/build.gradle.kts'
+      - 'app/src/main/java/com/operit/webviewapp/MainActivity.java'
+      - '.github/workflows/desktop-windows.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-windows-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
+        working-directory: desktop
+    env:
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+
+      - name: 安装依赖
+        run: |
+          npm ci
+          node node_modules/electron/install.js
+
+      - name: 建置 exe
+        id: build
+        run: |
+          npm run build:win
+          version=$(node -p "require('./src/build-info.json').versionName")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: 上传 exe
+        uses: actions/upload-artifact@v7
+        with:
+          name: kaku-desktop-${{ steps.build.outputs.version }}-windows-x64
+          path: |
+            desktop/dist/kaku-desktop-*.exe
+            desktop/dist/kaku-desktop-*.exe.sha256
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: 写入运行摘要
+        run: |
+          {
+            echo "## 克克卡库桌面版 ${{ steps.build.outputs.version }}"
+            echo
+            echo "在本页底部 **Artifacts** 下载 \`kaku-desktop-${{ steps.build.outputs.version }}-windows-x64\`（zip 内含 exe 和 SHA-256）。"
+            echo
+            echo '```'
+            cat dist/kaku-desktop-*.exe.sha256
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 单元测试
+        run: npm test
+
+      - name: 端到端测试（开发模式）
+        run: npm run test:e2e
+
+      - name: 端到端测试（打包后的程序）
+        run: KAKU_E2E_EXECUTABLE="$PWD/dist/win-unpacked/KaKu.exe" npm run test:e2e
+
+      - name: 上传测试截图与结果
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: desktop-test-output
+          path: desktop/test-output/
+          if-no-files-found: ignore
+          retention-days: 14

@@ -1,0 +1,7 @@
+node_modules/
+dist/
+build/icon.ico
+build/icons/
+src/build-info.json
+test-output/
+dist-linux/
