@@ -12,6 +12,14 @@
 - 与 Android 的数据**不会自动同步**。迁移请用完整备份文件、实时备份目录或 WebDAV。
 - **更新**：设置页“检查更新” → 发现新版时提示 → 点“打开下载页” → 下载新的 exe 替换旧的即可。桌面版不自动下载、不自动安装。
 
+## 从 GitHub Actions 取得 exe
+
+仓库里的 `.github/workflows/desktop-windows.yml` 会在 GitHub 的 Windows 机器上建置 exe，并在 Windows 上跑单元测试和端到端测试。推送到 `main` 或 `claude/**` 分支、且改动了 `desktop/`、页面、图标或版本号时自动运行，也可以在 Actions 页面手动点 “Run workflow”。
+
+下载：仓库的 **Actions** 页 → “桌面版 Windows 建置” → 选一次运行 → 页面底部 **Artifacts** 里的 `kaku-desktop-<版本>-windows-x64`（zip，内含 exe 和 SHA-256；需登录 GitHub，保留 30 天）。运行摘要里也会列出 SHA-256。
+
+fork 出来的仓库默认不运行 workflow，第一次需要在 Actions 页点 “I understand my workflows, go ahead and enable them”。这个 workflow 不发布 Release，也不改 `update.json`。
+
 ## 建置
 
 需要 Node.js 20 或以上（含 npm）。Windows、Linux、macOS 都可以建置 Windows exe，不需要 Wine。
@@ -141,6 +149,6 @@ KAKU_E2E_EXECUTABLE=$PWD/dist-linux/linux-unpacked/KaKu xvfb-run -a npm run test
 
 ## 测试情况与待实测项目
 
-- 在 Linux 容器中（Electron 45.2.2，Xvfb）通过：单元测试 13 项；端到端测试 13 项；同一套端到端测试也对打包后的程序跑过。
+- 在 Linux 容器中（Electron 45.2.2，Xvfb）通过：单元测试 13 项；端到端测试 13 项；同一套端到端测试也对打包后的程序跑过。Windows 上的结果见 GitHub Actions 运行记录。
 - 酒馆 HTTP 互通测试的是照 SillyTavern 1.19 源码实现的本地模拟服务（Basic 认证、cookie-session 签名 cookie、csrf-sync、角色列表 / 导入 / 取图），**不是真正的 SillyTavern**。
 - **尚未在 Windows 实机上运行**。需要在 Windows 上确认：文件夹/文件对话框、Downloads 位置、系统代理、任务栏图标切换、SmartScreen 提示、portable 解压速度、中文路径和 OneDrive 目录、杀毒软件是否误报。

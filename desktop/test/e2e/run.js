@@ -58,7 +58,7 @@ async function step(name, fn) {
   catch (e) {
     results.push({ name, ok: false, error: String(e && e.stack || e) });
     console.log('FAIL', name, '\n   ', String(e && e.stack || e).split('\n').slice(0, 6).join('\n    '));
-    try { await page.screenshot({ path: path.join(OUT, 'fail-' + results.length + '.png') }); } catch (x) { /* ignore */ }
+    try { await page.screenshot({ path: path.join(OUT, (process.env.KAKU_E2E_EXECUTABLE ? 'packaged' : 'dev') + '-fail-' + results.length + '.png') }); } catch (x) { /* ignore */ }
   }
 }
 
@@ -429,13 +429,15 @@ async function main() {
     assert.ok(!(await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].isDestroyed())), '窗口仍在');
   });
 
-  await page.screenshot({ path: path.join(OUT, 'final.png') });
+  const label = process.env.KAKU_E2E_EXECUTABLE ? 'packaged' : 'dev';
+  await page.screenshot({ path: path.join(OUT, 'final-' + label + '.png') });
   await app.close();
   st.server.close(); ai.server.close();
   const failed = results.filter((r) => !r.ok);
-  fs.writeFileSync(path.join(OUT, 'e2e-results.json'), JSON.stringify({ at: new Date().toISOString(), electron: require('electron/package.json').version, results }, null, 2));
+  fs.writeFileSync(path.join(OUT, 'e2e-results-' + label + '.json'), JSON.stringify({ at: new Date().toISOString(), platform: process.platform, electron: require('electron/package.json').version, results }, null, 2));
   console.log(`\n${results.length - failed.length}/${results.length} passed`);
-  if (!failed.length) fs.rmSync(ROOT, { recursive: true, force: true }); else console.log('测试目录保留：' + ROOT);
+  if (!failed.length) { try { fs.rmSync(ROOT, { recursive: true, force: true, maxRetries: 5 }); } catch (e) { console.log('测试目录未能删除：' + ROOT); } }
+  else console.log('测试目录保留：' + ROOT);
   process.exit(failed.length ? 1 : 0);
 }
 
