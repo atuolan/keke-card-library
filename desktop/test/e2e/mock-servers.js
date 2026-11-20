@@ -127,4 +127,27 @@ function startOpenAI() {
   return new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve({ server, log, url: 'http://127.0.0.1:' + server.address().port })));
 }
 
-module.exports = { startSillyTavern, startOpenAI };
+// 3) WebDAV（模拟坚果云等第三方服务）：完全不返回 CORS 响应头；预检 OPTIONS 因为没带认证返回 401。
+//    浏览器里的普通网页会被 CORS 拦住；Android 端 file:// + 允许任意来源访问，所以不受影响。
+function startWebDav({ user, password, host }) {
+  const files = new Map();
+  const log = [];
+  const want = 'Basic ' + Buffer.from(user + ':' + password).toString('base64');
+  const server = http.createServer(async (req, res) => {
+    const body = await readBody(req);
+    const url = new URL(req.url, 'http://x');
+    const p = decodeURIComponent(url.pathname);
+    log.push({ method: req.method, path: p, origin: req.headers.origin || '', auth: !!req.headers.authorization });
+    const send = (status, data = '', type = 'text/plain', extra = {}) => { res.writeHead(status, { 'Content-Type': type, ETag: '"e2e"', ...extra }); res.end(data); };
+    if (req.headers.authorization !== want) return send(401, 'Unauthorized', 'text/plain', { 'WWW-Authenticate': 'Basic realm="dav"' });
+    if (req.method === 'PROPFIND') return send(207, '<?xml version="1.0"?><d:multistatus xmlns:d="DAV:"><d:response><d:href>' + p + '</d:href></d:response></d:multistatus>', 'application/xml; charset=utf-8');
+    if (req.method === 'MKCOL') { if (files.has(p)) return send(405); files.set(p, null); return send(201); }
+    if (req.method === 'PUT') { const existed = files.has(p); files.set(p, body); return send(existed ? 204 : 201); }
+    if (req.method === 'GET') { const f = files.get(p); return f ? send(200, f, p.endsWith('.json') ? 'application/json' : 'application/octet-stream') : send(404, 'Not found'); }
+    if (req.method === 'DELETE') { files.delete(p); return send(204); }
+    return send(405);
+  });
+  return new Promise((resolve) => server.listen(0, '0.0.0.0', () => resolve({ server, log, files, url: 'http://' + host + ':' + server.address().port })));
+}
+
+module.exports = { startSillyTavern, startOpenAI, startWebDav };

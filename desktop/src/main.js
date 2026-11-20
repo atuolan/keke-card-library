@@ -170,6 +170,54 @@ function setupSession() {
       item.once('done', (e, state) => ctx.toast(state === 'completed' ? '已保存：' + target : '保存失败：' + state));
     } catch (e) { item.cancel(); }
   });
+  setupCrossOrigin(ses);
+}
+
+/**
+ * Android 端页面以 file:// 载入，并开启 setAllowUniversalAccessFromFileURLs，页面直接 fetch 外部服务
+ * （例如 WebDAV / 坚果云）不受 CORS 限制。桌面版页面来源是 kaku://app，第三方服务不会返回允许它的 CORS 头，
+ * 所以这里只对“主窗口主页面（请求头 Origin: kaku://app）发出的跨域请求”补上 CORS 响应头，并让预检请求通过。
+ * 卡片美化预览等 iframe 是沙盒的不透明来源（Origin: null），不受影响，仍按浏览器规则拦截。
+ */
+function setupCrossOrigin(ses) {
+  const pending = new Map();
+  const lower = (h) => { const o = {}; for (const [k, v] of Object.entries(h || {})) o[k.toLowerCase()] = Array.isArray(v) ? v.join(', ') : String(v); return o; };
+  ses.webRequest.onBeforeSendHeaders((d, cb) => {
+    try {
+      if (mainWindow && !mainWindow.isDestroyed() && d.webContentsId === mainWindow.webContents.id) {
+        const h = lower(d.requestHeaders);
+        if (h.origin === ORIGIN && /^https?:/i.test(d.url)) {
+          pending.set(d.id, {
+            preflight: d.method === 'OPTIONS' && !!h['access-control-request-method'],
+            method: h['access-control-request-method'] || d.method,
+            headers: h['access-control-request-headers'] || '',
+          });
+        }
+      }
+    } catch (e) { /* ignore */ }
+    cb({ requestHeaders: d.requestHeaders });
+  });
+  ses.webRequest.onHeadersReceived((d, cb) => {
+    const p = pending.get(d.id);
+    if (!p) { cb({}); return; }
+    const headers = {};
+    for (const [k, v] of Object.entries(d.responseHeaders || {})) if (!/^access-control-/i.test(k)) headers[k] = v;
+    headers['Access-Control-Allow-Origin'] = [ORIGIN];
+    headers['Access-Control-Allow-Credentials'] = ['true'];
+    const exposed = Object.keys(headers).filter((k) => !/^set-cookie2?$/i.test(k) && !/^access-control-/i.test(k));
+    if (exposed.length) headers['Access-Control-Expose-Headers'] = [exposed.join(', ')];
+    if (p.preflight) {
+      headers['Access-Control-Allow-Methods'] = [p.method];
+      if (p.headers) headers['Access-Control-Allow-Headers'] = [p.headers];
+      headers['Access-Control-Max-Age'] = ['600'];
+      // 许多 WebDAV 服务对不带认证的 OPTIONS 预检返回 401/405：预检本身视为通过，真正的请求仍会带认证发出
+      if (d.statusCode < 200 || d.statusCode >= 300) { cb({ responseHeaders: headers, statusLine: 'HTTP/1.1 204 No Content' }); return; }
+    }
+    cb({ responseHeaders: headers });
+  });
+  const done = (d) => pending.delete(d.id);
+  ses.webRequest.onCompleted(done);
+  ses.webRequest.onErrorOccurred(done);
 }
 
 function windowIcon() {
@@ -203,7 +251,8 @@ function createWindow() {
       nodeIntegrationInSubFrames: false,
       sandbox: true,
       webSecurity: true,
-      allowRunningInsecureContent: false,
+      // 与 Android MIXED_CONTENT_ALWAYS_ALLOW 一致：页面可以访问 http:// 的局域网 WebDAV（如 NAS）
+      allowRunningInsecureContent: true,
       spellcheck: false,
       backgroundThrottling: false,
       webviewTag: false,

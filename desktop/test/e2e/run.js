@@ -9,7 +9,7 @@ const path = require('path');
 const { _electron } = require('playwright');
 const { cardPng, readChara } = require('./fixtures');
 const { buildZip } = require('../unit/helpers');
-const { startSillyTavern, startOpenAI } = require('./mock-servers');
+const { startSillyTavern, startOpenAI, startWebDav } = require('./mock-servers');
 const { walkEntries } = require('../../src/zip');
 
 const DESKTOP = path.resolve(__dirname, '..', '..');
@@ -23,7 +23,7 @@ const D = {
 for (const d of Object.values(D)) fs.mkdirSync(d, { recursive: true });
 
 const results = [];
-let app, page, st, ai;
+let app, page, st, ai, dav;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const pe = (fn, arg) => page.evaluate(fn, arg);
 const waitPage = (fn, arg, timeout = 60000) => page.waitForFunction(fn, arg, { timeout, polling: 100 });
@@ -121,6 +121,9 @@ async function main() {
   await fixtures();
   st = await startSillyTavern({ charactersDir: D.remoteChars, basicUser: 'kaku', basicPassword: 'p@ss:word' });
   ai = await startOpenAI();
+  // 用本机非回环地址的 http 连接，顺便覆盖“安全来源页面访问 http 地址”（混合内容）的情况，例如局域网 NAS
+  const lanIp = Object.values(os.networkInterfaces()).flat().find((x) => x && x.family === 'IPv4' && !x.internal)?.address || '127.0.0.1';
+  dav = await startWebDav({ user: 'kaku@example.com', password: 'app-pass', host: lanIp });
   await launch();
 
   await step('启动：8 个桥存在、页面没有 Node 权限、存储哨兵、诊断脱敏、图标、外链', async () => {
@@ -381,6 +384,28 @@ async function main() {
     assert.ok(await pe(() => S.cards.some((c) => c.name === '超大远端')));
   });
 
+  await step('WebDAV（坚果云）：页面直接 fetch 第三方服务，不受 CORS / 混合内容拦截', async () => {
+    await pe(([u]) => { webdavConfig.url = u + '/dav/'; webdavConfig.user = 'kaku@example.com'; webdavConfig.pass = 'app-pass'; }, [dav.url]);
+    await pe(() => testWebdav());
+    await waitPage(() => /连接成功|连接失败|网络或跨域错误/.test(document.getElementById('toast').textContent), null, 20000);
+    const t1 = await pe(() => document.getElementById('toast').textContent);
+    assert.match(t1, /连接成功/, '测试连接：' + t1);
+    const total = await cardCount();
+    await pe(() => syncPush());
+    // 新版同步会读取响应头 ETag、发送 If-Match / If-None-Match，都需要跨域放行
+    await waitPage(() => /云端已确认|上传完成|同步失败/.test(document.getElementById('toast').textContent), null, 60000);
+    const t2 = await pe(() => document.getElementById('toast').textContent);
+    assert.match(t2, new RegExp('云端已确认 ' + total + ' 项，失败/冲突 0 项'), '推送：' + t2);
+    const index = JSON.parse(dav.files.get('/dav/KakuSync/Index.json').toString('utf8'));
+    assert.strictEqual(Object.keys(index.fileMap).length, total);
+    await pe(() => syncPull());
+    await waitPage((n) => Array.isArray(_wdPullList) && _wdPullList.length === n, total, 30000);
+    assert.ok(dav.log.some((x) => x.method === 'PROPFIND' && x.auth));
+    assert.ok(dav.log.filter((x) => x.method === 'PUT').length >= total + 1);
+    assert.ok(dav.log.some((x) => x.method === 'OPTIONS' && !x.auth), '服务器对预检返回 401 时仍能继续');
+    assert.ok(dav.log.every((x) => x.origin === 'kaku://app'));
+  });
+
   await step('AndroidAI：postAsync/getAsync 后台请求，结果经 onAIHttpResult 回调', async () => {
     const reply = await pe((u) => aiNativeAsync('POST', u + '/v1/chat/completions', 'sk-e2e-key', JSON.stringify({ model: 'mock-model', messages: [{ role: 'user', content: '你好' }] })), ai.url);
     assert.strictEqual(JSON.parse(reply).choices[0].message.content, '模拟回复：收到');
@@ -432,7 +457,7 @@ async function main() {
   const label = process.env.KAKU_E2E_EXECUTABLE ? 'packaged' : 'dev';
   await page.screenshot({ path: path.join(OUT, 'final-' + label + '.png') });
   await app.close();
-  st.server.close(); ai.server.close();
+  st.server.close(); ai.server.close(); dav.server.close();
   const failed = results.filter((r) => !r.ok);
   fs.writeFileSync(path.join(OUT, 'e2e-results-' + label + '.json'), JSON.stringify({ at: new Date().toISOString(), platform: process.platform, electron: require('electron/package.json').version, results }, null, 2));
   console.log(`\n${results.length - failed.length}/${results.length} passed`);

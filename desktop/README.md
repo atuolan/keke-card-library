@@ -71,7 +71,7 @@ npm test
 xvfb-run -a npm run test:e2e
 ```
 
-端到端测试：启动真正的桌面版，用页面自己的函数逐个流程跑一遍（导入、导出、恢复备份、文件夹扫描、酒馆 HTTP、酒馆文件夹、User 设定写回、实时备份写入与恢复、AI、检查更新、返回键）。系统对话框在测试中被替换为直接返回测试目录；酒馆服务器是照 SillyTavern 1.19 源码实现的本地模拟服务。Windows 上不需要 `xvfb-run`。
+端到端测试：启动真正的桌面版，用页面自己的函数逐个流程跑一遍（导入、导出、恢复备份、文件夹扫描、酒馆 HTTP、酒馆文件夹、User 设定写回、实时备份写入与恢复、WebDAV 云同步、AI、检查更新、返回键）。WebDAV 模拟服务完全不返回 CORS 响应头、对预检返回 401，并通过局域网地址的 http 访问。系统对话框在测试中被替换为直接返回测试目录；酒馆服务器是照 SillyTavern 1.19 源码实现的本地模拟服务。Windows 上不需要 `xvfb-run`。
 
 对打包后的程序跑同一套测试（在 Linux 上验证 asar、`resources/assets`、版本号等打包行为）：
 
@@ -120,6 +120,7 @@ KAKU_E2E_EXECUTABLE=$PWD/dist-linux/linux-unpacked/KaKu xvfb-run -a npm run test
 - 返回键：鼠标侧键“后退”或 Alt+← 调用页面的 `_handleNativeBack`，逐层关闭弹窗；全部关闭后**不退出**，退出请关闭窗口。关闭窗口时如果正在写文件（导出、暂存复制、酒馆写回、实时备份），会先询问。
 - 检查更新：读取与 Android 相同的 `update.json`（kitten112233/keke-card-library 的 main 分支），比较 versionCode；有新版时只弹窗并打开 Release 页面，不下载、不安装。若之后 `update.json` 增加 `desktopUrl`（必须是该仓库 releases 下的地址），优先打开它。
 - 网络：酒馆和 AI 请求改用 Chromium 网络栈，会使用 Windows 的系统代理设置。酒馆 cookie 与 Android 一样只保存在内存，重开程序后重新获取。
+- 跨域：Android 页面以 `file://` 载入并允许访问任意来源，所以页面直接 `fetch` 第三方服务（WebDAV / 坚果云云同步）不受 CORS 限制。桌面版对主页面（`Origin: kaku://app`）发出的跨域请求补上 CORS 响应头并放行预检请求，效果相同；卡片美化预览等沙盒 iframe 不在此列。另外与 Android 的 `MIXED_CONTENT_ALWAYS_ALLOW` 一样，允许访问 `http://` 地址（如局域网 NAS 的 WebDAV）。
 - 诊断报告：结构不变，`source` 为 `windows-desktop`；Android 专属字段（SDK、厂商、WebView 包名）换成系统版本、Electron / Chromium 版本；脱敏规则额外处理 Windows 路径。
 
 **实现上更稳妥的地方**
@@ -149,6 +150,6 @@ KAKU_E2E_EXECUTABLE=$PWD/dist-linux/linux-unpacked/KaKu xvfb-run -a npm run test
 
 ## 测试情况与待实测项目
 
-- 在 Linux 容器中（Electron 45.2.2，Xvfb）通过：单元测试 13 项；端到端测试 13 项；同一套端到端测试也对打包后的程序跑过。Windows 上的结果见 GitHub Actions 运行记录。
+- 在 Linux 容器中（Electron 45.2.2，Xvfb）通过：单元测试 13 项；端到端测试 14 项；同一套端到端测试也对打包后的程序跑过。Windows 上的结果见 GitHub Actions 运行记录。
 - 酒馆 HTTP 互通测试的是照 SillyTavern 1.19 源码实现的本地模拟服务（Basic 认证、cookie-session 签名 cookie、csrf-sync、角色列表 / 导入 / 取图），**不是真正的 SillyTavern**。
 - **尚未在 Windows 实机上运行**。需要在 Windows 上确认：文件夹/文件对话框、Downloads 位置、系统代理、任务栏图标切换、SmartScreen 提示、portable 解压速度、中文路径和 OneDrive 目录、杀毒软件是否误报。
