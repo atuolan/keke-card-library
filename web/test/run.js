@@ -156,6 +156,24 @@ async function main() {
     assert.deepStrictEqual(s.update, [true]);
     assert.match(s.location, /浏览器的网站存储/);
     assert.ok(!/应用私有|Download \/ 卡库/.test(s.location), '不再显示安卓的数据位置');
+    // 快速查找：点最后一个按钮，设置页应滚动到对应板块（确认弹窗滚动在浏览器版里正常）
+    await page.click('.settings-page-tab[data-page="organize"]');
+    await sleep(300);
+    const lastQuick = page.locator('#settingsQuickNav .settings-quick-item').last();
+    const target = (await lastQuick.textContent()).trim();
+    await lastQuick.click();
+    await sleep(1200);
+    const jump = await pe(() => {
+      const body = document.querySelector('#settingsModal .modal-body'), box = document.querySelector('#settingsModal .modal-box');
+      const scroller = [body, box].find((el) => el && el.scrollTop > 0);
+      const card = document.querySelector('#settingsModal .settings-jump-focus');
+      const r = card && card.getBoundingClientRect(), view = (scroller || body).getBoundingClientRect();
+      return { scrolled: !!scroller, focus: card ? (card.querySelector('h4')?.textContent || '') : '', inView: !!r && r.top >= view.top - 2 && r.top < view.top + view.height / 2 };
+    });
+    assert.ok(jump.scrolled, '点快速查找后设置页有滚动');
+    assert.ok(jump.focus, '目标板块高亮：' + target);
+    assert.ok(jump.inView, '目标板块滚到可见区域上半部');
+    await page.screenshot({ path: path.join(OUT, '02-设置-快速查找.png') });
     await pe(() => closeModal('settingsModal'));
   });
 

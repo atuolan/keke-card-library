@@ -1,9 +1,10 @@
 // 浏览器版外壳：由 web/build.js 在建置时附加到页面末尾，app/src/main/assets/index.html 本身不改。
-// 规则沿用原作者浏览器预览版（docs/web-preview.js、docs/browser-layout.css），并按当前页面结构修正：
+// 规则沿用原作者浏览器预览版（docs/web-preview.js），并按当前页面结构修正：
 //  1. 浏览器里用不了的设置板块（酒馆互通、WebDAV 云同步、导入与文件夹扫描、实时备份目录）隐藏；
 //  2. 安卓专属按钮（应用图标、检查更新等）变灰，并说明原因；
 //  3. 备份板块的“数据位置”改成浏览器里的实际情况；
-//  4. 弹窗按可见视口（含手机键盘）调整大小。
+//  4. 设置页“快速查找”里指向隐藏板块的按钮去掉。
+// 弹窗大小与滚动由页面本身处理，外壳不管。
 // 页面在安卓 App 或桌面版里打开时（有原生桥接），外壳什么都不做。
 (function () {
   'use strict';
@@ -83,18 +84,4 @@
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', apply);
   else apply();
-
-  function fitBrowserViewport() {
-    var v = window.visualViewport, root = document.documentElement;
-    root.style.setProperty('--browser-height', (v ? v.height : window.innerHeight) + 'px');
-    root.style.setProperty('--browser-width', (v ? v.width : window.innerWidth) + 'px');
-    root.style.setProperty('--browser-top', (v ? v.offsetTop : 0) + 'px');
-    root.style.setProperty('--browser-left', (v ? v.offsetLeft : 0) + 'px');
-  }
-  fitBrowserViewport();
-  window.addEventListener('resize', fitBrowserViewport);
-  if (window.visualViewport) {
-    visualViewport.addEventListener('resize', fitBrowserViewport);
-    visualViewport.addEventListener('scroll', fitBrowserViewport);
-  }
 })();
