@@ -3683,9 +3683,16 @@ async function exportAllData(){
     return;
   }
   // 回退：浏览器 Blob 下载（非 WebView 或旧版本）
-  const cards=await dbA('cards');
-  dlB(new Blob([JSON.stringify({version:3,exportedAt:Date.now(),sections:S.sections,groups:S.groups,mainTagLib:S.mainTagLib,subTagLib:S.subTagLib,cards})],{type:'application/json'}),fname);
-  showToast('已导出 '+cards.length+' 张卡片备份');
+  // 逐卡序列化再拼 Blob，避免整库一个大字符串超过浏览器上限（Invalid string length）
+  const keys=await dbKeys('cards'),parts=[];let count=0;
+  busyShow('正在导出完整备份','准备中…');
+  try{
+    for(let i=0;i<keys.length;i++){const c=await dbG('cards',keys[i]);if(c){parts.push((count?',':'')+JSON.stringify(c));count++}busyUpdate(i+1,keys.length,c&&c.name?c.name:'');await sleep(0)}
+    const head='{"version":3,"exportedAt":'+Date.now()+',"count":'+count+',"sections":'+JSON.stringify(S.sections)+',"groups":'+JSON.stringify(S.groups)+',"mainTagLib":'+JSON.stringify(S.mainTagLib)+',"subTagLib":'+JSON.stringify(S.subTagLib)+',"cards":[';
+    dlB(new Blob([head,...parts,']}'],{type:'application/json'}),fname);
+  }catch(e){busyHide();showToast('导出失败：'+e.message);return}
+  busyHide();
+  showToast('已导出 '+count+' 张卡片备份');
 }
 
 let restoreStageTask=null;
@@ -6131,7 +6138,7 @@ async function runOriginalTask(t){const remain=transferRemaining(t);for(let i=0;
 async function runZipTask(t){const remain=transferRemaining(t),segment=remain.slice(0,TRANSFER_SEGMENT);if(!segment.length)return;const DL=window.AndroidDL,part=(t.part||0)+1,name=`${t.baseName||'卡库原始文件'}_第${part}部分_${segment.length}项.zip`;if(!DL?.beginZip||!DL.beginZip(name))throw new Error('无法创建 ZIP');try{const names=new Set();for(let i=0;i<segment.length;i++){const c=await dbG('cards',segment[i]);if(!c?.rawData)continue;Object.assign(c,await prepareOriginalForOutput(c));let nm=safeExportName(c,exportExt(c)),base=nm,k=1;while(names.has(nm))nm=base.replace(/(\.[^.]+)$/,'_'+k+++'$1');names.add(nm);busyUpdate(t.completed.length+i+1,t.ids.length,c.name||'');await writeZipEntryNative(c,nm);await sleep(0)}if(!DL.finishZip())throw new Error('ZIP 封口失败')}catch(e){try{DL.abortZip()}catch(x){}throw e}t.completed.push(...segment);t.part=part;await saveTransferTask(t)}
 async function executeBrowserTransferTask(t){
  const ids=transferRemaining(t);if(t.type==='zip')throw new Error('电脑浏览器ZIP打包暂未开放；可使用“原始文件”逐项导出');
- if(t.type==='backup'){const meta=subsetBackupMeta(ids),cards=[];for(let i=0;i<ids.length;i++){const c=await dbG('cards',ids[i]);if(c)cards.push(c);busyUpdate(i+1,ids.length,c?.name||'');await sleep(0)}dlB(new Blob([JSON.stringify({version:3,exportedAt:Date.now(),count:cards.length,sections:meta.sections,groups:meta.groups,mainTagLib:meta.mainTagLib,subTagLib:meta.subTagLib,tagParentsBySection:meta.tagParentsBySection,cards})],{type:'application/json'}),(t.baseName||'卡库备份')+'.json');t.completed.push(...ids);return}
+ if(t.type==='backup'){/* 逐卡序列化成独立片段再拼 Blob：整库一次 JSON.stringify 会超过浏览器字符串上限（Invalid string length） */const meta=subsetBackupMeta(ids),parts=[];let count=0;for(let i=0;i<ids.length;i++){const c=await dbG('cards',ids[i]);if(c){parts.push((count?',':'')+JSON.stringify(c));count++}busyUpdate(i+1,ids.length,c?.name||'');await sleep(0)}const head=JSON.stringify({version:3,exportedAt:Date.now(),count,sections:meta.sections,groups:meta.groups,mainTagLib:meta.mainTagLib,subTagLib:meta.subTagLib,tagParentsBySection:meta.tagParentsBySection}).replace(/}$/,',"cards":[');dlB(new Blob([head,...parts,']}'],{type:'application/json'}),(t.baseName||'卡库备份')+'.json');t.completed.push(...ids);return}
  if(t.type==='originals'){for(let i=0;i<ids.length;i++){const c=await dbG('cards',ids[i]);if(c?.rawData){Object.assign(c,await prepareOriginalForOutput(c));dlB(du2b(c.rawData),(t.prefixSection?'['+(c.section||'')+'] ':'')+safeExportName(c,exportExt(c)))}else t.failed.push({id:ids[i],reason:'缺少原始文件'});t.completed.push(ids[i]);busyUpdate(i+1,ids.length,c?.name||'');await sleep(120)}return}
  throw new Error('未知任务类型')}
 async function executeTransferTask(t){if(transferRunning)return;transferRunning=true;t.status='running';await saveTransferTask(t);closeModal('transferModal');busyShow(t.title,'准备中…');try{if(!window.AndroidDL?.beginFile){await executeBrowserTransferTask(t)}while(transferRemaining(t).length){if(t.type==='backup')await runBackupTask(t);else if(t.type==='originals')await runOriginalTask(t);else if(t.type==='zip')await runZipTask(t);else throw new Error('未知任务类型')}t.status='completed';if(t.cursorUpdate){safetyOriginalCursors[t.cursorUpdate.section]=t.cursorUpdate.next>=t.cursorUpdate.total?0:t.cursorUpdate.next;saveSafetyOriginalCursors()}await saveTransferTask(t);busyHide();transferRunning=false;await dbD('meta',transferTaskKey(t.id));await dbD('meta','transferSummary');transferSummary=null;updateTransferChip();exitSelectMode();renderGrid();showToast('导出完成：'+t.ids.length+' 项'+((t.part||0)>1?'，'+t.part+' 个部分':''))}catch(e){t.status='failed';t.error=e.message||String(e);await saveTransferTask(t);busyHide();transferRunning=false;showToast('任务已暂停：'+t.error);openTransferCenter()}}
